@@ -1,0 +1,16 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python (source/ 자산 재생성 파이프라인)
+__pycache__/
+*.py[cod]
+
+# Editor / 도구 설정
+.vscode/
+.idea/
+.claude/
+
+# 로컬 로그
+*.log

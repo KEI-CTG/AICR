@@ -1,0 +1,20 @@
+{
+  "name": "KEI · AI Convergence Research Group",
+  "short_name": "KEI AICR",
+  "description": "AI-powered decision support for climate and environmental policy",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#070a14",
+  "theme_color": "#070a14",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "assets/KEI_Wordmark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

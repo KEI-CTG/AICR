@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>연구 브리프 · KEI AI 융합연구단</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f6f0e3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="KEI AICR">
+<link rel="apple-touch-icon" href="assets/KEI_Wordmark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css">
+<style>
+  :root{
+    --bg:#f6f0e3;
+    --ink:#0f1624;
+    --muted:rgba(15,22,36,.62);
+    --muted-strong:rgba(15,22,36,.82);
+    --faint:rgba(15,22,36,.38);
+    --line:rgba(15,22,36,.12);
+    --blue:#009fde;
+    --green:#00ab84;
+    --amber:#ff8a2a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:24px 64px;
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{ display:flex;align-items:center;gap:10px;text-decoration:none; }
+  .topbar .logo .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:
+      0 0 14px rgba(0,159,222,.45),
+      0 0 4px rgba(0,171,132,.55),
+      0 0 3px rgba(255,255,255,.8) inset;
+  }
+  .topbar .logo svg{ height:51px; width:auto; display:block }
+  .topbar .logo svg .cls-1{ fill:var(--ink) }
+  .topbar .logo svg .cls-2{ fill:#009fde }
+  .topbar .logo svg .cls-3{ fill:#00ab84 }
+  .topbar .back{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px;
+    border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+
+  /* ---- Hero band ---- */
+  .hero-band{
+    position:relative;
+    isolation:isolate;
+    overflow:hidden;
+    min-height:180px;
+    padding:24px 64px;
+    background:#05070d;
+    display:flex;
+    align-items:center;
+  }
+  .hero-band__bg{
+    position:absolute; inset:0; z-index:1;
+    background:url("assets/hero-bg.jpg") center/cover no-repeat;
+    filter:saturate(1.08) contrast(1.06);
+  }
+  .hero-band__scrim{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:
+      linear-gradient(180deg,
+        rgba(7,10,20,.55) 0%,
+        rgba(7,10,20,.22) 22%,
+        transparent 45%,
+        transparent 85%,
+        rgba(7,10,20,.18) 100%);
+  }
+  .hero-band > .topbar{ position:relative; z-index:10; width:100%; }
+
+  .hero-band .topbar{
+    padding:0;
+    border:0;
+  }
+  .hero-band .topbar .logo svg .cls-1{ fill:#e8e6de; }
+  .hero-band .topbar .logo .dot{
+    background:#00e5c5;
+    box-shadow:
+      0 0 18px #00e5c5,
+      0 0 6px #009fde,
+      0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .hero-band .topbar .back:hover{
+    color:#ffffff;
+    border-bottom-color:rgba(255,255,255,.45);
+  }
+
+  @keyframes pulse{
+    0%,100%{ opacity:.55; transform:scale(1) }
+    50%    { opacity:.95; transform:scale(1.08) }
+  }
+
+  /* ---- Page wrapper ---- */
+  .page{
+    max-width:1040px;
+    margin:0 auto;
+    padding:48px 64px 96px;
+  }
+  .page-header{
+    display:flex;
+    align-items:flex-start;
+    gap:28px;
+    margin-bottom:4px;
+  }
+  .brandmark{
+    flex:none;
+    width:88px;
+  }
+  .brandmark .mondrian-mount{
+    width:88px; height:88px;
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .brandmark .mondrian-mount canvas{ display:block }
+  .brandmark .lab-wordmark{
+    display:block;
+    width:88px;
+    height:auto;
+    margin-top:6px;
+  }
+  .brandmark .lab-wordmark text{
+    font-family:'Orbitron',sans-serif;
+    font-weight:900; font-size:72px;
+    fill:var(--ink);
+  }
+  .brandmark .lab-wordmark rect{ fill:var(--ink); }
+  .page-header__text{
+    flex:1; min-width:0;
+  }
+  .page-header__text h1{ margin-bottom:10px; }
+  .page-header__text .lede{ margin-bottom:0; }
+
+  .page-label{
+    display:flex; align-items:center; gap:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue);
+    margin-bottom:20px;
+  }
+  .page-label .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:
+      0 0 14px rgba(0,159,222,.45),
+      0 0 4px rgba(0,171,132,.55),
+      0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .page h1{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:800; font-size:clamp(32px, 4.2vw, 44px);
+    line-height:1.15; letter-spacing:-0.01em;
+    color:var(--ink);
+    margin-bottom:18px;
+  }
+  .page .lede{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:17px; font-weight:400; line-height:1.7;
+    color:var(--muted-strong);
+    max-width:720px;
+    margin-bottom:56px;
+  }
+
+  /* ---- Brief list ---- */
+  .briefs{
+    display:flex; flex-direction:column;
+    border-top:1px solid var(--line);
+  }
+  .brief{
+    display:grid;
+    grid-template-columns: 116px 1fr auto;
+    gap:28px;
+    padding:22px 0;
+    border-bottom:1px solid var(--line);
+    text-decoration:none; color:inherit;
+    transition:background .2s;
+  }
+  .brief:hover{ background:rgba(15,22,36,.035) }
+  .brief:hover .link{ color:var(--blue) }
+  .brief:hover .link .arrow{ transform: translateX(3px) }
+  .brief .date{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:18px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--blue);
+    align-self:center;
+  }
+  .brief .body{ min-width:0 }
+  .brief .title{
+    display:block;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-weight:600; font-size:20px;
+    line-height:1.5; letter-spacing:0;
+    color:var(--ink);
+  }
+  .brief .meta{
+    display:block;
+    margin-top:10px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:15.5px; font-weight:400;
+    line-height:1.85;
+    letter-spacing:0.012em;
+    color:var(--muted-strong);
+  }
+  .brief .meta em{
+    font-style:italic;
+    font-weight:700;
+    color:inherit;
+  }
+  .brief .link{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:18px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+    align-self:center;
+    display:inline-flex; align-items:center; gap:6px;
+    transition:color .2s;
+    white-space:nowrap;
+  }
+  .brief .link .arrow{
+    display:inline-block;
+    transition:transform .2s;
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:36px 64px 44px;
+  }
+  .site-footer__inner{
+    max-width:1660px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:48px; flex-wrap:wrap;
+  }
+  .site-footer a{
+    color:var(--ink); text-decoration:none;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:color .2s;
+  }
+  .site-footer a:hover{ color:var(--blue) }
+  .site-footer .address{
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    line-height:1.4; color:var(--ink);
+    text-align:right;
+  }
+  .mail-icon{ width:18px; height:18px; flex:none; opacity:.9 }
+
+  /* ---- Responsive ---- */
+  @media (max-width:720px){
+    .topbar{ padding:16px 24px }
+    .topbar .section{ display:none }
+    .hero-band{ padding:16px 24px; min-height:160px; }
+    .page{ padding:40px 24px 80px }
+    .brief{
+      grid-template-columns:1fr;
+      gap:8px; padding:22px 0;
+    }
+    .brief .link{ padding-top:0 }
+    .site-footer{ padding:32px 24px }
+    .site-footer__inner{ flex-direction:column; gap:20px }
+    .site-footer .address{ text-align:left }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-band">
+  <div class="hero-band__bg" aria-hidden="true"></div>
+  <div class="hero-band__scrim" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <a href="index.ko.html" class="logo" aria-label="KEI AI 융합연구단 홈">
+      <span class="dot" aria-hidden="true"></span>
+      <svg viewBox="83 188 163 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KEI">
+        <g>
+          <path class="cls-1" d="M141.15,254.81h0c0,3.8,2.1,6.7,7.32,6.7h28.95v-9.82h-23.11c-.76,0-1.14-.37-1.14-.99v-8.18h21.85v-9.82h-21.85v-7.92h24.24v-9.82h-36.27v39.85Z"/>
+          <path class="cls-1" d="M117.34,237.61l19.15-22.65h-14.61l-13.9,16.44v-16.44h-12.03v42.34h0c0,2.39,1.32,4.21,4.6,4.21h7.42v-15.74c7.67,2.45,13.83,8.28,16.74,15.74h12.08c-2.87-10.42-10.03-19.05-19.46-23.9Z"/>
+          <path class="cls-1" d="M186.34,214.96v42.34c0,2.39,1.32,4.21,4.6,4.21h7.42v-46.55h-12.03Z"/>
+        </g>
+        <g>
+          <path class="cls-3" d="M233.28,210.31c0,5.14-4.17,9.31-9.31,9.31-1.29,0-2.53-.27-3.65-.74v9.69c1.18.23,2.4.36,3.65.36,10.28,0,18.62-8.34,18.62-18.62,0-1.61-.23-3.16-.61-4.66h-9.96c.79,1.37,1.26,2.96,1.26,4.66Z"/>
+          <path class="cls-2" d="M214.66,210.31c0-5.14,4.17-9.31,9.31-9.31,1.29,0,2.53.27,3.65.74v-9.69c-1.18-.23-2.4-.36-3.65-.36-10.28,0-18.62,8.34-18.62,18.62,0,1.61.23,3.16.61,4.66h9.96c-.79-1.37-1.26-2.96-1.26-4.66Z"/>
+        </g>
+      </svg>
+    </a>
+    <a href="#" class="back" id="back-link" aria-label="Back">
+      <span aria-hidden="true">←</span><span>Back</span>
+    </a>
+  </div>
+</header>
+
+<main class="page">
+  <div class="page-label">
+    <span class="dot" aria-hidden="true"></span>
+    <span>Briefs</span>
+  </div>
+  <div class="page-header">
+    <div class="brandmark" aria-hidden="true">
+      <div id="mondrian-mount" class="mondrian-mount"></div>
+      <svg class="lab-wordmark" viewBox="0 2 240 54" xmlns="http://www.w3.org/2000/svg" aria-label="KEI·AI">
+        <text x="0"   y="54" textLength="131" lengthAdjust="spacing">KEI</text>
+        <rect x="138" y="23" width="14" height="14"/>
+        <text x="240" y="54" text-anchor="end" textLength="81" lengthAdjust="spacing">AI</text>
+      </svg>
+    </div>
+    <div class="page-header__text">
+      <h1>연구 동향 브리프</h1>
+      <p class="lede">환경 · 기후 분야의 인공지능과 기계학습 연구 동향을 정리한 비공식 노트입니다. 외부 논문 리뷰, 모델 비교, 데이터셋 소개 등을 다루며, 항목을 클릭하면 본문으로 이동합니다.</p>
+    </div>
+  </div>
+
+  <div class="briefs">
+
+    <a class="brief" href="briefs_files/brief-lorenz-chaos-climate.html">
+      <span class="date">2026.04</span>
+      <span class="body">
+        <span class="title">결정론적 카오스와 기후 예측 가능성: 나비효과가 드러낸 날씨와 기후의 수학적 구분</span>
+        <span class="meta">AI 생성 · 김경호 검토 · <em>Climate · Dynamical systems</em></span>
+      </span>
+      <span class="link">READ <span class="arrow">→</span></span>
+    </a>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href="mailto:khkim@kei.re.kr">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+      </svg>
+      khkim@kei.re.kr
+    </a>
+    <div class="address">
+      Bldg. B, Sejong National Research Complex<br>
+      370 Sicheong-daero, Sejong 30147, Republic of Korea
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Random hero bg — picks one of the still-image variants on each load
+  (() => {
+    const variants = [
+      'assets/hero-bg.jpg',
+      'assets/hero_blue_v3_poster.png'
+    ];
+    const pick = variants[Math.floor(Math.random() * variants.length)];
+    const bg = document.querySelector('.hero-band__bg');
+    if (bg) bg.style.backgroundImage = `url("${pick}")`;
+  })();
+
+  // Back link — prefer history if it came from within the site, else go to home
+  (() => {
+    const back = document.getElementById('back-link');
+    if (!back) return;
+    back.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+        history.back();
+      } else {
+        location.href = 'index.ko.html';
+      }
+    });
+  })();
+</script>
+
+<!-- Mondrian pixel-grid brandmark (same module as hero) -->
+<script src="./assets/logo-mondrian.js"></script>
+<script>
+  mountMondrianLogo('mondrian-mount', {
+    size: 88,
+    gridSteps: 4,
+    exactCounts: {
+      '#00ab84': 3,  // green
+      '#ff8a2a': 3,  // orange
+      '#009fde': 3,  // blue
+      '#808080': 2,  // gray
+      '#000000': 5,  // black
+    },
+    bgColor: '#f6f0e3',
+    strokeColor: '#f6f0e3',
+    strokeWeight: 0,
+    autoShuffleMs: 3500,
+    transitionSpeed: 0.05,
+    interactive: true,
+  });
+</script>
+
+</body>
+</html>

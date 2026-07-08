@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" id="_레이어_1" data-name="레이어 1" viewBox="1904.73 697.49 560 594.98">
+  <defs>
+    <style>
+      .cls-1 {
+        letter-spacing: -.023em;
+      }
+
+      .cls-2 {
+        fill: #ff8a2a;
+        stroke: #ff8a2a;
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8 {
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-6, .cls-7, .cls-8 {
+        stroke-width: 2px;
+      }
+
+      .cls-9 {
+        letter-spacing: -.009em;
+      }
+
+      .cls-10 {
+        fill: #f3ebdc;
+        font-family: Tahoma, Tahoma;
+        font-size: 50px;
+      }
+
+      .cls-11 {
+        letter-spacing: -.017em;
+      }
+
+      .cls-3 {
+        fill: #f3ebdc;
+        stroke: #f3ebdc;
+      }
+
+      .cls-4 {
+        fill: #00e5c5;
+        stroke: #00e5c5;
+      }
+
+      .cls-5 {
+        fill: none;
+        stroke: #f3ebdc;
+        stroke-width: 5px;
+      }
+
+      .cls-6 {
+        fill: #f3ebdc;
+        stroke: #f3ebdc;
+      }
+
+      .cls-12 {
+        letter-spacing: -.005em;
+      }
+
+      .cls-7 {
+        fill: #009fde;
+        stroke: #009fde;
+      }
+
+      .cls-13 {
+        letter-spacing: 0em;
+      }
+
+      .cls-8 {
+        fill: #00ab84;
+        stroke: #00ab84;
+      }
+    </style>
+  </defs>
+  <text class="cls-10" transform="translate(1937.518 1190.468)"><tspan x="0.000" y="0.000">E</tspan><tspan class="cls-9" x="28.052" y="0.000">n</tspan><tspan x="55.493" y="0.000">vi</tspan><tspan class="cls-12" x="91.821" y="0.000">r</tspan><tspan x="109.594" y="0.000">onmental </tspan><tspan class="cls-1" x="330.834" y="0.000">P</tspan><tspan x="357.251" y="0.000">o</tspan><tspan class="cls-13" x="384.400" y="0.000">l</tspan><tspan x="395.873" y="0.000">icy </tspan><tspan x="41.052" y="74.444">Knowledge G</tspan><tspan class="cls-11" x="330.921" y="74.444">r</tspan><tspan x="348.083" y="74.444">aph</tspan></text>
+  <ellipse class="cls-6" cx="2097.984" cy="749.999" rx="7.275" ry="7.175" />
+  <polygon class="cls-5" points="1938.331 899.213 1985.665 970.112 2098.213 1001.233 2192.355 976.337 2247.577 1040.135 2301.748 1035.985 2362.229 955.071 2340.14 873.118 2284.918 827.474 2214.444 756.933 2096.636 751.746 2009.857 803.615 1938.331 899.213" />
+  <polygon class="cls-5" points="1938.331 899.213 2009.857 803.615 2041.939 847.703 2087.169 817.619 2096.636 751.746 2214.444 756.933 2227.592 814.507 2210.236 915.651 2192.355 976.337 2156.591 888.16 2139.913 954.033 2098.213 1001.233 2060.872 944.178 1990.924 889.716 1938.331 899.213" />
+  <polyline class="cls-5" points="2009.857 803.615 1990.924 889.716 2041.939 847.703 2060.872 944.178 2156.591 888.16" />
+  <polyline class="cls-5" points="2096.636 751.746 2159.396 783.905 2087.169 817.619 2107.154 876.49 2159.396 783.905 2214.444 756.933" />
+  <polygon class="cls-5" points="2159.396 783.905 2227.592 814.507 2156.591 888.16 2159.396 783.905" />
+  <polyline class="cls-5" points="2210.236 915.651 2268.789 910.334 2286.466 828.753 2248.804 861.707 2210.236 915.651 2254.414 992.07 2301.748 1035.985 2317.876 961.641 2340.14 873.118" />
+  <polyline class="cls-5" points="2254.414 992.07 2318.429 959.441 2268.789 910.334" />
+  <polyline class="cls-5" points="1985.665 970.112 2060.872 944.178 2107.154 876.49" />
+  <ellipse class="cls-7" cx="2156.591" cy="785.49" rx="26.954" ry="26.583" />
+  <ellipse class="cls-4" cx="2158.596" cy="890.137" rx="18.682" ry="18.425" />
+  <ellipse class="cls-2" cx="2340.14" cy="873.896" rx="18.682" ry="18.425" />
+  <ellipse class="cls-2" cx="2008.071" cy="805.611" rx="18.682" ry="18.425" />
+  <ellipse class="cls-4" cx="2062.51" cy="943.53" rx="26.954" ry="26.583" />
+  <ellipse class="cls-8" cx="2210.236" cy="916.947" rx="12.505" ry="12.333" />
+  <ellipse class="cls-4" cx="2087.169" cy="817.944" rx="12.505" ry="12.333" />
+  <ellipse class="cls-6" cx="2214.444" cy="757.174" rx="12.505" ry="12.333" />
+  <ellipse class="cls-6" cx="2286.422" cy="826.451" rx="12.505" ry="12.333" />
+  <ellipse class="cls-6" cx="2316.223" cy="960.61" rx="12.505" ry="12.333" />
+  <ellipse class="cls-8" cx="1989.389" cy="890.137" rx="12.505" ry="12.333" />
+  <ellipse class="cls-4" cx="2256.506" cy="992.07" rx="18.682" ry="18.425" />
+  <ellipse class="cls-7" cx="2096.442" cy="1001.233" rx="12.096" ry="11.93" />
+  <ellipse class="cls-3" cx="2192.092" cy="975.377" rx="7.275" ry="7.175" />
+  <ellipse class="cls-8" cx="2244.41" cy="1038.737" rx="12.096" ry="11.93" />
+  <ellipse class="cls-3" cx="2139.913" cy="953.313" rx="7.275" ry="7.175" />
+  <ellipse class="cls-6" cx="2360.513" cy="953.313" rx="7.275" ry="7.175" />
+  <ellipse class="cls-3" cx="2228.731" cy="814.118" rx="7.275" ry="7.175" />
+  <ellipse class="cls-3" cx="2267.913" cy="908.562" rx="7.275" ry="7.175" />
+  <ellipse class="cls-4" cx="2247.139" cy="862.647" rx="7.275" ry="7.175" />
+  <ellipse class="cls-4" cx="2301.995" cy="1033.983" rx="7.275" ry="7.175" />
+  <ellipse class="cls-8" cx="2105.259" cy="876.49" rx="7.275" ry="7.175" />
+  <ellipse class="cls-3" cx="2042.831" cy="848.296" rx="7.275" ry="7.175" />
+  <ellipse class="cls-3" cx="1985.106" cy="970.112" rx="7.275" ry="7.175" />
+  <ellipse class="cls-3" cx="1938.331" cy="901.387" rx="7.275" ry="7.175" />
+</svg>

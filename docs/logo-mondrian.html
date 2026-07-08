@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KEI · AI — Mondrian Logomark (standalone)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Space+Grotesk:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:    #061328;
+    --ink:   #f3ebdc;
+    --muted: rgba(243,235,220,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100vh;background:var(--bg);color:var(--ink)}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:32px;padding:48px 24px;
+  }
+  header{text-align:center}
+  header .eyebrow{
+    font-family:'JetBrains Mono',ui-monospace,monospace;
+    font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:10px;
+  }
+  header h1{
+    font-family:'Space Grotesk',sans-serif;font-weight:500;
+    font-size:22px;letter-spacing:.02em;color:var(--ink);
+  }
+  .lockup{
+    display:flex; flex-direction:column; align-items:center;
+    padding: 32px;
+    background: #070a14;
+    border: 1px solid rgba(243,235,220,.08);
+  }
+  #mondrian-mount{ width: 272px; height: 272px; }
+  #mondrian-mount canvas{ display:block }
+  .lab-wordmark{
+    display:block;
+    margin-top: 16px;
+    width: 272px;
+    height: auto;
+  }
+  .lab-wordmark text{
+    font-family:'Orbitron',sans-serif;
+    font-weight:900; font-size:59px;
+    fill: var(--ink);
+  }
+  .lab-wordmark rect{ fill: var(--ink); }
+  footer{
+    font-family:'JetBrains Mono',ui-monospace,monospace;
+    font-size:11px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;
+    display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center;
+  }
+  footer .dot{width:4px;height:4px;background:var(--muted);border-radius:50%}
+
+  /* Back button — same style as brief/presentation pages */
+  .topbar{
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display:flex; align-items:center; justify-content:flex-start;
+    padding: 24px 32px; pointer-events: none;
+  }
+  .topbar .back{
+    pointer-events: auto;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:#009fde; text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+</style>
+</head>
+<body>
+
+<nav class="topbar" aria-label="Top navigation">
+  <a href="./index.ko.html" class="back" id="back-link" aria-label="이전 페이지로">
+    <span aria-hidden="true">←</span><span>Back</span>
+  </a>
+</nav>
+
+<header>
+  <div class="eyebrow">Logomark · Standalone preview</div>
+  <h1>KEI · AI — Mondrian Logomark</h1>
+</header>
+
+<div class="lockup">
+  <div id="mondrian-mount"></div>
+  <svg class="lab-wordmark" viewBox="0 2 240 54" xmlns="http://www.w3.org/2000/svg" aria-label="KEI·AI">
+    <text x="0"   y="54" textLength="131" lengthAdjust="spacing">KEI</text>
+    <rect x="138" y="23" width="14" height="14"/>
+    <text x="240" y="54" text-anchor="end" textLength="81" lengthAdjust="spacing">AI</text>
+  </svg>
+</div>
+
+<footer>
+  <span>Click grid to shuffle</span>
+  <span class="dot"></span>
+  <span>Auto every 3.5s</span>
+  <span class="dot"></span>
+  <span>Same config as index.ko.html about-section</span>
+</footer>
+
+<script>
+  // Back button — history.back() if same-origin referrer, else fall back
+  (() => {
+    const back = document.getElementById('back-link');
+    if (!back) return;
+    back.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+        history.back();
+      } else {
+        location.href = './index.ko.html';
+      }
+    });
+  })();
+</script>
+
+<!-- Shared module — identical config to the about section -->
+<script src="./assets/logo-mondrian.js"></script>
+<script>
+  mountMondrianLogo('mondrian-mount', {
+    size: 272,
+    gridSteps: 4,
+    exactCounts: {
+      '#00ab84': 3,
+      '#ff8a2a': 3,
+      '#009fde': 3,
+      '#808080': 2,
+      '#000000': 5,
+    },
+    bgColor: '#070a14',
+    strokeColor: '#000000',
+    strokeWeight: 0.5,
+    autoShuffleMs: 3500,
+    transitionSpeed: 0.05,
+    interactive: true,
+  });
+</script>
+</body>
+</html>

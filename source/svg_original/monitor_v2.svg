@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_5" data-name="레이어 5" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 4848.932 2693.851">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#_무제_그라디언트_3);
+        opacity: .9;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        isolation: isolate;
+      }
+
+      .cls-6 {
+        fill: #e1534e;
+      }
+
+      .cls-2 {
+        fill: url(#_무제_그라디언트_3-2);
+        opacity: .85;
+      }
+
+      .cls-7 {
+        fill: #040000;
+        font-family: Tahoma, Tahoma;
+        font-size: 45px;
+      }
+
+      .cls-8, .cls-5 {
+        fill: #fff;
+      }
+
+      .cls-9 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-10 {
+        letter-spacing: .002em;
+      }
+
+      .cls-3 {
+        fill: #f6b250;
+      }
+
+      .cls-3, .cls-5 {
+        opacity: .8;
+      }
+
+      .cls-11 {
+        letter-spacing: -.005em;
+      }
+
+      .cls-4 {
+        fill: #f8c880;
+        opacity: .7;
+      }
+
+      .cls-12 {
+        letter-spacing: 0em;
+      }
+
+      .cls-13 {
+        fill: none;
+        stroke: #040000;
+        stroke-width: 5px;
+      }
+    </style>
+    <linearGradient id="_무제_그라디언트_3" data-name="무제 그라디언트 3" x1="1673.152" y1="1943.005" x2="1677.222" y2="1938.935" gradientTransform="translate(-64664.922 16355.868) scale(40 -8)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f2941a"/>
+      <stop offset="1" stop-color="#ea7a13"/>
+    </linearGradient>
+    <linearGradient id="_무제_그라디언트_3-2" data-name="무제 그라디언트 3" x1="1673.152" y1="1934.447" x2="1677.222" y2="1930.377" xlink:href="#_무제_그라디언트_3"/>
+  </defs>
+  <path class="cls-8" d="M2429.603,784.74h34.401c1.9,0,3.44,1.54,3.44,3.44h0c0,1.9-1.54,3.44-3.44,3.44h-34.401c-1.9,0-3.44-1.54-3.44-3.44h0c0-1.9,1.54-3.44,3.44-3.44Z"/>
+  <path class="cls-5" d="M2436.484,801.94h20.64c1.9,0,3.44,1.54,3.44,3.44h0c0,1.9-1.54,3.44-3.44,3.44h-20.64c-1.9,0-3.44-1.54-3.44-3.44h0c0-1.9,1.54-3.44,3.44-3.44Z"/>
+  <circle class="cls-6" cx="2434.297" cy="828.108" r="6.162"/>
+  <rect class="cls-1" x="2237.726" y="817.624" width="209.68" height="20.968" rx="2" ry="2"/>
+  <rect class="cls-4" x="2257.726" y="849.874" width="132.98" height="24.934" rx="2" ry="2"/>
+  <rect class="cls-2" x="2237.726" y="886.09" width="209.68" height="20.968" rx="2" ry="2"/>
+  <rect class="cls-3" x="2237.726" y="918.341" width="174.36" height="24.934" rx="2" ry="2"/>
+  <rect class="cls-13" x="2219.529" y="788.046" width="289.196" height="252.092" rx="2.509" ry="2.509"/>
+  <line class="cls-13" x1="2219.529" y1="975.751" x2="2508.725" y2="975.751"/>
+  <line class="cls-13" x1="2291.828" y1="1076.151" x2="2436.426" y2="1076.151"/>
+  <rect class="cls-13" x="2338.481" y="1040.138" width="51.291" height="36.013"/>
+  <circle class="cls-6" cx="2398.994" cy="930.808" r="6.162"/>
+  <circle class="cls-6" cx="2434.297" cy="896.574" r="6.162"/>
+  <circle class="cls-6" cx="2375.867" cy="862.341" r="6.162"/>
+  <text class="cls-7" transform="translate(2175.755 1164.167)"><tspan x="0" y="0">Pub</tspan><tspan class="cls-12" x="74.773" y="0">l</tspan><tspan x="85.1" y="0">ic </tspan><tspan class="cls-11" x="130.21" y="0">I</tspan><tspan x="146.777" y="0">n</tspan><tspan class="cls-9" x="171.87" y="0">f</tspan><tspan x="185.757" y="0">ormation </tspan><tspan class="cls-10" x="110.764" y="67">S</tspan><tspan x="135.922" y="67">ou</tspan><tspan class="cls-11" x="185.449" y="67">r</tspan><tspan x="201.445" y="67">ces</tspan></text>
+</svg>
