@@ -1,0 +1,1643 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="중력법칙의 상수를 지역 특징의 함수로 바꾸고 그 위에 그래프 신경망을 얹은 neuroGravity의 작동 원리와 검증 결과, 그리고 도시 간 전이를 좌우하는 공간 소득 분리 지수에 대한 상세 해설.">
+<title>중력법칙을 신경망에 심다 · KEI AI 융합연구단</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#f6f0e3">
+<link rel="apple-touch-icon" href="../assets/KEI_Wordmark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css">
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#f6f0e3;
+    --ink:#0f1624;
+    --muted:rgba(15,22,36,.62);
+    --muted-strong:rgba(15,22,36,.82);
+    --muted-mid:rgba(15,22,36,.68);
+    --faint:rgba(15,22,36,.38);
+    --line:rgba(15,22,36,.12);
+    --line-soft:rgba(15,22,36,.06);
+    --blue:#009fde;
+    --green:#00ab84;
+    --amber:#ff8a2a;
+    --warn:#c46411;             /* deeper amber for warning callouts */
+    --serif:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;  /* sans-serif gothic — used for tabular/equation content for visual consistency */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+    min-height:100vh;
+  }
+  ::selection{ background:rgba(0,159,222,.20); color:var(--ink); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 64px; border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{ display:flex;align-items:center;gap:10px;text-decoration:none; }
+  .topbar .logo .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+  }
+  .topbar .logo svg{ height:51px; width:auto; display:block }
+  .topbar .logo svg .cls-1{ fill:var(--ink) }
+  .topbar .logo svg .cls-2{ fill:#009fde }
+  .topbar .logo svg .cls-3{ fill:#00ab84 }
+  .topbar .back{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+
+  /* ---- Hero band ---- */
+  .hero-band{
+    position:relative; isolation:isolate; overflow:hidden;
+    min-height:180px; padding:24px 64px; background:#05070d;
+    display:flex; align-items:center;     /* vertically center topbar */
+  }
+  .hero-band > .topbar{ width:100%; }
+  .hero-band__bg{
+    position:absolute; inset:0; z-index:1;
+    background:url("../assets/hero-bg.jpg") center/cover no-repeat;
+    filter:saturate(1.08) contrast(1.06);
+  }
+  .hero-band__scrim{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:
+      linear-gradient(180deg,
+        rgba(7,10,20,.55) 0%,
+        rgba(7,10,20,.22) 30%,
+        transparent 55%,
+        transparent 85%,
+        rgba(7,10,20,.18) 100%);
+  }
+  .hero-band > .topbar{ position:relative; z-index:10; }
+  .hero-band .topbar{ padding:0; border:0; }
+  .hero-band .topbar .logo svg .cls-1{ fill:#e8e6de; }
+  .hero-band .topbar .logo .dot{
+    background:#00e5c5;
+    box-shadow:0 0 18px #00e5c5,0 0 6px #009fde,0 0 3px rgba(255,255,255,.8) inset;
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  .hero-band .topbar .back:hover{
+    color:#ffffff; border-bottom-color:rgba(255,255,255,.45);
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:.55; transform:scale(1) }
+    50%    { opacity:.95; transform:scale(1.08) }
+  }
+
+  /* ---- Article container ---- */
+  .article{
+    max-width:760px;
+    margin:0 auto;
+    padding:56px 32px 96px;
+  }
+
+  /* Article header */
+  .article-header{
+    margin-bottom:48px;
+    padding-bottom:36px;
+    border-bottom:1px solid var(--line);
+  }
+  .page-label{
+    display:flex; align-items:center; gap:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); margin-bottom:24px;
+  }
+  .page-label .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .article-header h1{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px, 3.6vw, 40px);
+    line-height:1.22; letter-spacing:-0.02em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-subtitle{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400; line-height:1.45;
+    color:var(--muted-strong);
+    margin-bottom:24px;
+    letter-spacing:-0.005em;
+  }
+  .article-header .byline{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:16px; font-weight:500;
+    color:var(--muted-strong);
+    margin-bottom:6px;
+  }
+  .article-header .article-meta{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:14px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .article-header .article-meta .date{ color:var(--blue); }
+  .article-header .article-meta em{
+    font-style:normal; color:var(--muted-strong); margin-left:4px;
+  }
+
+  /* Lede / abstract */
+  .article-abstract{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:18px; font-weight:400; line-height:1.8;
+    color:var(--muted-strong);
+    border-left:3px solid var(--blue);
+    padding:6px 0 6px 22px;
+    margin-bottom:56px;
+  }
+
+  /* Body copy */
+  .article-body{
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    font-size:17px;
+    line-height:1.85;
+    color:var(--muted-strong);
+  }
+  .article-body section{ margin-bottom:64px; }
+  .article-body section:last-child{ margin-bottom:0; }
+
+  .article-body h2{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:700;
+    font-size:clamp(22px, 2.2vw, 28px);
+    line-height:1.3; letter-spacing:-0.015em;
+    color:var(--ink);
+    margin:0 0 24px;
+  }
+  .article-body h3{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-weight:600;
+    font-size:19px; line-height:1.4;
+    margin:32px 0 12px;
+    color:var(--ink);
+    letter-spacing:-0.005em;
+  }
+  .article-body p{ color:var(--muted-strong); margin-bottom:1.4em; }
+  .article-body p:last-child{ margin-bottom:0; }
+  .article-body strong{ color:var(--ink); font-weight:700; }
+  .article-body em{ color:var(--ink); font-style:italic; }
+  .article-body a{
+    color:var(--blue);
+    text-decoration:none;
+    border-bottom:1px solid rgba(0,159,222,.35);
+    transition:border-color .2s, color .2s;
+    word-break:break-all;
+  }
+  .article-body a:hover{ color:var(--ink); border-bottom-color:var(--ink); }
+
+  .article-body ul, .article-body ol{
+    padding-left:24px;
+    color:var(--muted-strong);
+    margin-bottom:1.4em;
+  }
+  .article-body li{ margin-bottom:8px; line-height:1.75; }
+  .article-body li::marker{ color:var(--faint); }
+
+  .article-body code{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:0.92em;
+    background:rgba(15,22,36,.06);
+    padding:2px 6px; border-radius:3px;
+    color:var(--ink);
+  }
+  .article-body pre{
+    background:rgba(15,22,36,.045);
+    border-left:2px solid var(--line);
+    padding:18px 22px;
+    margin:28px 0; overflow-x:auto;
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:13.5px; line-height:1.7;
+    color:var(--ink);
+  }
+  .article-body pre code{ background:transparent; padding:0; font-size:inherit; }
+
+  .article-body blockquote{
+    margin:36px 0;
+    padding:6px 0 6px 24px;
+    border-left:2px solid var(--line);
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:19px; font-style:italic;
+    line-height:1.55; letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+
+  /* ---- Callout (subtle left rule, no box) ---- */
+  .callout{
+    margin:36px 0;
+    padding:6px 0 6px 24px;
+    border-left:2px solid var(--blue);
+  }
+  .callout-warn{ border-left-color:var(--warn); }
+  .callout-title{
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400;
+    line-height:1.45;
+    letter-spacing:-0.005em;
+    color:var(--blue);
+    margin-bottom:8px;
+  }
+  .callout-warn .callout-title{ color:var(--warn); }
+  .callout p{
+    font-size:17px;                 /* match body copy */
+    color:var(--muted-strong);
+    line-height:1.85;               /* match body copy */
+    margin-bottom:0.7em;
+  }
+  .callout p:last-child{ margin-bottom:0; }
+
+  /* ---- Variable list (dl) ---- */
+  .var-list{ margin:24px 0 32px; }
+  .var-row{
+    display:grid;
+    grid-template-columns:48px 1fr;
+    align-items:baseline;
+    gap:18px;
+    margin-bottom:18px;
+  }
+  .var-row:last-child{ margin-bottom:0; }
+  .var-row dt{
+    font-family:var(--serif);
+    font-style:italic; font-weight:400;
+    font-size:20px;
+    color:var(--ink);
+  }
+  .var-row dd{
+    font-size:17px;
+    color:var(--muted-strong);
+    line-height:1.7;
+  }
+
+  /* ---- Equation block ---- */
+  .figure-equations{ margin:40px 0; }
+  .equations-display{ max-width:460px; margin:0 auto; }
+  .eq-line{
+    display:flex; align-items:center; gap:16px;
+    margin-bottom:14px;
+    font-size:21px;
+    font-family:var(--serif);
+    font-variant-numeric:tabular-nums;
+    line-height:1.4;
+  }
+  .eq-line:last-of-type{ margin-bottom:0; }
+  .eq-lhs{
+    font-style:italic;
+    min-width:72px;
+    color:var(--ink);
+    opacity:.78;
+  }
+  .eq-op{ color:var(--muted); }
+  .eq-rhs{ color:var(--ink); font-weight:500; }
+
+  /* ---- Data table (custom row layout) ---- */
+  .data-table{
+    margin:32px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .data-row{
+    display:grid;
+    grid-template-columns:auto 1fr 2.4fr;
+    gap:20px;
+    padding:13px 0;
+    align-items:baseline;
+    font-size:17px;
+    line-height:1.6;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .data-row:last-child{ border-bottom:none; }
+  .data-label{
+    font-family:var(--serif);
+    font-weight:600;
+    min-width:72px;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .data-value{
+    font-family:var(--serif);
+    font-weight:600;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .data-note{ color:var(--muted-strong); }
+
+  /* ---- Comparison cards (no actual grid — sequential) ---- */
+  .comparison-grid{ margin:36px 0; }
+  .comparison-card{ margin-bottom:32px; }
+  .comparison-card:last-child{ margin-bottom:0; }
+  .comparison-card h3{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-weight:700; font-size:19px;
+    color:var(--ink);
+    margin:0 0 8px;
+    letter-spacing:-0.005em;
+  }
+  .comparison-card p{
+    font-size:15.5px;
+    color:var(--muted-strong);
+    line-height:1.7;
+    margin-bottom:0;
+  }
+
+  /* ---- Figure with canvas ---- */
+  .figure-canvas{
+    margin:40px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .figure-canvas canvas{
+    display:block; width:100%; height:320px;
+    background:transparent;
+  }
+  .figure-canvas.figure-architecture canvas{ height:390px; }
+  .figure-canvas.figure-comparison canvas{ height:350px; }
+  .figure-canvas.figure-si-concept canvas{ height:300px; }
+  .figure-canvas figcaption{
+    padding:14px 4px 14px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14px; line-height:1.6;
+    color:var(--muted);
+  }
+
+  /* ---- Interactive explorer ---- */
+  .explorer-box{
+    margin:40px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .explorer-box canvas{
+    display:block; width:100%; height:380px;
+    background:transparent;
+  }
+  .slider-group{ padding:20px 4px 16px; }
+  .slider-row{
+    display:grid;
+    grid-template-columns:110px 1fr 56px;
+    align-items:center; gap:14px;
+    margin-bottom:14px;
+  }
+  .slider-row:last-of-type{ margin-bottom:18px; }
+  .slider-row label{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:15px; font-weight:500;
+    color:var(--muted-strong);
+  }
+  .slider-val{
+    font-family:var(--serif);
+    font-size:15px; font-weight:600;
+    text-align:right; color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:3px;
+    outline:none; background:var(--line);
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px; height:16px; border-radius:50%; cursor:pointer;
+    background:var(--ink); border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--line);
+    transition:transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover{ transform:scale(1.15); }
+  input[type="range"]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; cursor:pointer;
+    background:var(--ink); border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--line);
+  }
+  .reset-btn{
+    margin-top:4px;
+    padding:7px 16px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:13px; font-weight:500; letter-spacing:.02em;
+    color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--line); border-radius:3px;
+    cursor:pointer;
+    transition:border-color .2s, color .2s;
+  }
+  .reset-btn:hover{ border-color:var(--ink); }
+
+  /* ---- References (APA hanging indent) ---- */
+  .article-refs{
+    margin-top:64px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-refs h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px; font-weight:600;
+    letter-spacing:.10em; text-transform:uppercase;
+    color:var(--blue);
+    margin-bottom:18px;
+  }
+  .references{
+    list-style:none; padding:0;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14.5px; line-height:1.72;
+    color:var(--muted-strong);
+  }
+  .references li{
+    padding-left:28px; text-indent:-28px;
+    margin-bottom:14px;
+  }
+  .references li:last-child{ margin-bottom:0; }
+  .references em{ color:var(--ink); font-style:italic; }
+  .references a{
+    color:var(--muted);
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+    transition:color .2s, border-color .2s;
+    word-break:break-all;
+  }
+  .references a:hover{ color:var(--blue); border-bottom-color:var(--blue); }
+
+  /* ---- Colophon ---- */
+  .colophon{
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--line-soft);
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14px; line-height:1.7;
+    color:var(--muted);
+  }
+
+  /* ---- End-of-article nav ---- */
+  .article-end-nav{
+    margin-top:48px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-end-nav a{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 0; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .article-end-nav a:hover{
+    color:var(--ink); border-bottom-color:rgba(0,159,222,.45);
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:36px 64px 44px;
+  }
+  .site-footer__inner{
+    max-width:1660px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:48px; flex-wrap:wrap;
+  }
+  .site-footer a{
+    color:var(--ink); text-decoration:none;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:color .2s;
+  }
+  .site-footer a:hover{ color:var(--blue) }
+  .site-footer .address{
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    line-height:1.4; color:var(--ink);
+    text-align:right;
+  }
+  .mail-icon{ width:18px; height:18px; flex:none; opacity:.9 }
+
+  /* ---- Responsive ---- */
+  @media (max-width:768px){
+    .topbar{ padding:16px 24px }
+    .hero-band{ padding:16px 24px; min-height:140px; }
+    .article{ padding:40px 22px 72px; }
+    .article-body{ font-size:16px; }
+    .article-body section{ margin-bottom:48px; }
+    .data-row{ grid-template-columns:auto 1fr; gap:12px; }
+    .data-note{ grid-column:1 / -1; color:var(--muted); }
+    .var-row{ grid-template-columns:36px 1fr; gap:14px; }
+    .slider-row{ grid-template-columns:1fr 1fr 48px; }
+    .figure-canvas canvas{ height:260px; }
+    .figure-canvas.figure-architecture canvas{ height:470px; }
+    .figure-canvas.figure-comparison canvas{ height:520px; }
+    .figure-canvas.figure-si-concept canvas{ height:430px; }
+    .explorer-box canvas{ height:320px; }
+    .site-footer{ padding:32px 24px }
+    .site-footer__inner{ flex-direction:column; gap:20px }
+    .site-footer .address{ text-align:left }
+  }
+
+  @media print{
+    .figure-canvas,
+    .explorer-box{
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-band">
+  <div class="hero-band__bg" aria-hidden="true"></div>
+  <div class="hero-band__scrim" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <a href="../index.ko.html" class="logo" aria-label="KEI AI 융합연구단 홈">
+      <span class="dot" aria-hidden="true"></span>
+      <svg viewBox="83 188 163 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KEI">
+        <g>
+          <path class="cls-1" d="M141.15,254.81h0c0,3.8,2.1,6.7,7.32,6.7h28.95v-9.82h-23.11c-.76,0-1.14-.37-1.14-.99v-8.18h21.85v-9.82h-21.85v-7.92h24.24v-9.82h-36.27v39.85Z"/>
+          <path class="cls-1" d="M117.34,237.61l19.15-22.65h-14.61l-13.9,16.44v-16.44h-12.03v42.34h0c0,2.39,1.32,4.21,4.6,4.21h7.42v-15.74c7.67,2.45,13.83,8.28,16.74,15.74h12.08c-2.87-10.42-10.03-19.05-19.46-23.9Z"/>
+          <path class="cls-1" d="M186.34,214.96v42.34c0,2.39,1.32,4.21,4.6,4.21h7.42v-46.55h-12.03Z"/>
+        </g>
+        <g>
+          <path class="cls-3" d="M233.28,210.31c0,5.14-4.17,9.31-9.31,9.31-1.29,0-2.53-.27-3.65-.74v9.69c1.18.23,2.4.36,3.65.36,10.28,0,18.62-8.34,18.62-18.62,0-1.61-.23-3.16-.61-4.66h-9.96c.79,1.37,1.26,2.96,1.26,4.66Z"/>
+          <path class="cls-2" d="M214.66,210.31c0-5.14,4.17-9.31,9.31-9.31,1.29,0,2.53.27,3.65.74v-9.69c-1.18-.23-2.4-.36-3.65-.36-10.28,0-18.62,8.34-18.62,18.62,0,1.61.23,3.16.61,4.66h9.96c-.79-1.37-1.26-2.96-1.26-4.66Z"/>
+        </g>
+      </svg>
+    </a>
+    <a href="../briefs.html" class="back" aria-label="브리프 목록으로 돌아가기">
+      <span aria-hidden="true">←</span><span>Back</span>
+    </a>
+  </div>
+</header>
+
+<article class="article">
+  <header class="article-header">
+    <div class="page-label">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Brief</span>
+    </div>
+    <h1>중력법칙을 신경망에 심다</h1>
+    <p class="article-subtitle">neuroGravity는 인구 분포와 공개 지도만으로 도시의 이동 네트워크를 어떻게 복원하는가</p>
+    <p class="byline">AI 생성 · 김경호 검토</p>
+    <p class="article-meta">
+      <span class="date">2026.07.23</span> · <em>Urban science · Graph neural networks</em>
+    </p>
+  </header>
+
+  <p class="article-abstract">
+    통행 실태조사나 휴대전화 위치 자료가 없는 도시에서는 지역 간 이동을 담은 기점–종점 네트워크를 구성할 수 없다. neuroGravity는 고전 중력법칙의 상수를 지역 특징의 함수로 바꾸어 물리적 밑그림을 만들고 그 위에 그래프 신경망을 얹는 방식으로, 인구 분포와 OpenStreetMap만으로 도시 전체의 이동 흐름을 복원한다. 본 고는 이 모형의 작동 원리를 단계별로 정리하고, 검증 결과와 함께 도시 간 전이 가능성을 좌우하는 것으로 지목된 공간 소득 분리 지수를 살펴본다.
+  </p>
+
+  <div class="article-body">
+
+    <!-- ===== 1. 문제 제기 ===== -->
+    <section id="opening">
+      <h2>관측되지 않는 지도</h2>
+
+      <p>도시 계획과 감염병 대응은 사람들이 실제로 어디에서 어디로 움직이는지를 안다는 전제 위에 서 있다. 그 전제는 생각보다 자주 성립하지 않는다. 지역 간 하루 통행량을 행렬 형태로 정리한 자료, 곧 기점–종점 행렬(origin–destination matrix)을 갖춘 도시는 세계적으로 소수다. 통행 실태조사는 비용과 시간이 많이 들고, 휴대전화 위치 자료는 통신사와의 계약과 개인정보 보호 규정에 묶여 있다. 자료가 없는 곳은 대체로 도시화가 빠르게 진행 중인 저·중소득국이며, 교통 투자와 방역 판단의 실익이 가장 큰 곳도 같은 지역이다.</p>
+
+      <p>Yang 외(2026)가 <em>Nature Computational Science</em>에 보고한 neuroGravity는 이 공백을 관측이 아니라 추론으로 메우려는 시도다. 입력은 두 가지뿐이다. 지역별 인구 분포와, OpenStreetMap(OSM)에서 얻을 수 있는 건물·토지이용·시설·도로 정보. 두 자료 모두 전 지구적으로 공개되어 있다. 이것만으로 도시 전체의 이동 네트워크를 세우고, 나아가 한 도시에서 학습한 모형을 관측이 전혀 없는 다른 도시에 그대로 적용하는 것이 목표다.</p>
+
+      <p>이 목표가 성립한다면 얻는 것이 적지 않다. 저자들은 복원된 흐름으로 감염병 확산 모형을 구동해 실측 흐름 기반 결과와 대조했고, 지역 임베딩에서 가구 탄소발자국과 이산화질소 농도 같은 환경 지표를 추정했다. 이동 자료는 그 자체로도 쓰이지만, 더 자주 다른 분석의 입력으로 쓰인다. 입력이 비어 있으면 그 뒤의 분석이 모두 멈춘다.</p>
+    </section>
+
+    <!-- ===== 2. 문제의 형태 ===== -->
+    <section id="problem">
+      <h2>문제의 정확한 형태</h2>
+
+      <p>복원 문제를 정확히 적으면 이렇다. 도시가 <em>N</em>개의 행정 구역으로 나뉘어 있고 각 구역의 인구와 건조환경 특징이 주어질 때, 구역 쌍 (<em>i</em>, <em>j</em>) 사이의 하루 평균 통행량을 모든 쌍에 대해 추정한다. 여기서 추정 대상은 순위나 상대 확률이 아니라 <strong>절댓값</strong>이다. 이 구분은 뒤에서 기존 방법이 왜 작동하지 않는지를 설명할 때 다시 등장한다.</p>
+
+      <p>학습에 쓸 수 있는 관측은 극히 일부다. 저자들은 관측이 주어지는 방식을 세 가지로 나눈다. 첫째는 구역 쌍이 무작위로 흩어져 관측되는 경우, 둘째는 일부 구역의 모든 유출입이 관측되는 경우, 셋째는 관측된 구역들 <em>안에서</em> 시작하고 끝나는 통행만 관측되는 경우다. 셋째가 현실에 가장 가깝다. 조사가 일부 지역에서만 수행되면 그 경계 밖으로 나가는 통행은 종점을 알 수 없기 때문이다. 동시에 셋째는 가장 어렵다. 관측이 네트워크의 한 귀퉁이에 몰려 있어, 모형은 한 번도 본 적 없는 구역 조합으로 외삽해야 한다.</p>
+
+      <p>규모를 따져 보면 조건의 가혹함이 분명해진다. 보스턴은 250개 우편구역(ZCTA)으로 나뉘고 그 사이에 51,786개의 유효한 기점–종점 쌍이 존재한다. 구역의 10%, 곧 25개 구역을 관측한다고 할 때 실제로 값을 아는 쌍은 그 25개 구역 내부의 496개뿐이다. 전체의 약 1%다. 세 도시에서 10% 관측 조건은 전체 연결의 0.1~1.2%에 해당했다.</p>
+
+      <figure class="figure-canvas">
+        <canvas id="obs-canvas" role="img" aria-label="세 가지 관측 시나리오를 기점-종점 행렬 위에 표시한 도해. 무작위 관측은 흩어진 점으로, 일부 구역의 유출입은 행과 열의 띠로, 내부 관측은 왼쪽 위 모서리의 작은 정사각형 블록으로 나타난다."></canvas>
+        <figcaption>기점–종점 행렬(가로축 종점, 세로축 기점) 위에 표시한 세 가지 관측 시나리오. 이 연구가 다루는 것은 세 번째로, 관측된 구역들 내부의 통행만 보이므로 관측 영역이 모서리의 작은 정사각형에 갇힌다. 구역의 10%를 관측하면 이 블록의 넓이는 전체의 10% × 10% = 1%가 된다.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ===== 3. 왜 어려운가 ===== -->
+    <section id="why-hard">
+      <h2>두 갈래 접근이 깨지는 지점</h2>
+
+      <p>이 문제에 대한 고전적 답은 중력법칙이다. 1946년 지프(Zipf)가 제안한 이 모형은 두 지역 사이의 통행량이 두 지역 인구의 곱에 비례하고 거리의 거듭제곱에 반비례한다고 본다. 뉴턴의 만유인력 식에서 질량 자리에 인구를 놓은 형태다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">F<sub>ij</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">G · P<sub>i</sub> P<sub>j</sub> ⁄ D<sub>ij</sub><sup>α</sup></span>
+          </div>
+        </div>
+      </figure>
+
+      <dl class="var-list">
+        <div class="var-row"><dt>F<sub>ij</sub></dt><dd>구역 <em>i</em>에서 <em>j</em>로 향하는 하루 평균 통행량.</dd></div>
+        <div class="var-row"><dt>P</dt><dd>각 구역의 인구. 사람이 많을수록 보내고 받는 통행이 많다는 가정을 담는다.</dd></div>
+        <div class="var-row"><dt>D<sub>ij</sub></dt><dd>두 구역 사이의 공간 거리.</dd></div>
+        <div class="var-row"><dt>G</dt><dd>전체 통행량의 규모를 맞추는 상수. 도시 하나에 값 하나.</dd></div>
+        <div class="var-row"><dt>α</dt><dd>거리 감쇠 지수. 클수록 거리가 통행을 강하게 억제한다. 역시 도시 하나에 값 하나.</dd></div>
+      </dl>
+
+      <p>중력법칙의 장점은 분명하다. 매개변수가 둘뿐이고 각각의 의미가 해석 가능하며, 관측이 거의 없어도 적합할 수 있다. 인구가 많을수록, 거리가 가까울수록 통행이 많다는 구조를 모형이 강제하므로 자료가 빈약해도 결과가 터무니없어지지 않는다. 문제는 그 두 매개변수가 도시 전체에 하나씩만 주어진다는 데 있다. 실제 도시에서 거리의 효과는 장소마다 다르다. 지하철로 이어진 도심축에서는 20 km 떨어진 두 지역 사이에도 상당한 통행이 유지되지만, 간선도로에만 의존하는 주변부에서는 5 km만 넘어가도 통행이 급감한다. 하나의 α로는 두 상황을 동시에 설명할 수 없다.</p>
+
+      <p>아래 탐색기는 이 한계를 눈으로 확인하도록 만든 개념 도해다. 두 무리의 점은 각각 다른 감쇠율을 따르는 구역 쌍을 나타내며, 검은 직선은 슬라이더로 고른 α에서 가능한 가장 좋은 중력법칙 적합이다. α를 어느 쪽으로 옮겨도 한 무리를 맞추면 다른 무리가 어긋난다. 잔차 제곱합이 그 대가를 수치로 보여 준다.</p>
+
+      <div class="explorer-box">
+        <canvas id="alpha-explorer" role="img" aria-label="로그-로그 축 위에 서로 다른 거리 감쇠율을 따르는 두 무리의 점과, 슬라이더로 조절되는 단일 중력법칙 적합선을 나타낸 인터랙티브 도해."></canvas>
+        <div class="slider-group">
+          <div class="slider-row">
+            <label for="alpha-slider">거리 감쇠 지수 α</label>
+            <input type="range" id="alpha-slider" min="0.8" max="3.0" step="0.05" value="1.80">
+            <span class="slider-val" id="alpha-val" aria-live="polite">1.80</span>
+          </div>
+          <button id="alpha-reset" class="reset-btn">초기화</button>
+        </div>
+      </div>
+
+      <p>점의 값은 설명을 위해 만든 것이며 논문의 자료가 아니다. 다만 논문이 지적하는 실패 양상은 같다. 하나의 α를 쓰는 중력모형은 흐름의 전반적 분포는 그럴듯하게 그리면서 개별 연결의 값은 맞히지 못하고, 그 결과 복원된 흐름이 도심으로 과도하게 수렴하며 주변부 연결의 결을 잃는다.</p>
+
+      <p>반대편에는 딥러닝이 있다. Deep Gravity 계열은 신경망으로 이동 확률을 추정하는데, 각 기점의 총 유출량이 이미 주어졌다고 가정하고 그것을 종점들에 배분하는 구조다. 앞서 추정 대상이 절댓값이라고 못박은 이유가 여기 있다. 총 유출량 자체가 관측의 산물이므로, 사전 이동 자료가 전혀 없는 도시에서는 배분할 총량이 존재하지 않는다. 저자들은 출력과 손실 함수를 고쳐 이 제약을 완화한 변형(DG++)을 만들어 비교군에 넣었는데, 관측이 비교적 풍부한 로스앤젤레스에서는 neuroGravity에 근접했으나 포르투와 보고타에서는 실패했다.</p>
+
+      <p>총량 가정 없이 흐름을 직접 추정하는 길도 있다. 순수한 그래프 신경망(Graph Neural Network, GNN)은 지역 특징에서 통행량을 바로 예측하고 주변부 연결까지 포착한다. 여섯 도시 평균으로 보면 실제로 가장 강한 기준선이었다. 대신 관측된 1%에 과적합하기 쉽고, 도시 구조가 다른 곳으로 옮기면 무너진다. 물리 모형이 제공하던 구조적 제약이 없어, 자료가 말해 주지 않는 영역에서는 기댈 곳이 사라지기 때문이다.</p>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <h3>중력모형 — 해석은 되지만 맞지 않는다</h3>
+          <p>매개변수 둘의 의미가 분명하고 도시가 바뀌어도 형태가 유지되므로 전이는 쉽다. 그러나 표현력이 낮아 개별 연결의 값을 맞히지 못한다. 관측이 늘어날수록 평균에서 벗어난 사례가 많아져 설명력이 오히려 낮아지는 현상도 여기서 비롯한다.</p>
+        </div>
+        <div class="comparison-card">
+          <h3>그래프 신경망 — 맞지만 옮겨지지 않는다</h3>
+          <p>복잡한 흐름 패턴을 잘 포착하지만 관측된 소수 표본에 과적합한다. 학습에 쓰인 도시의 구조에 특유한 규칙을 익히므로, 도시 형태가 다른 곳으로 옮기면 성능이 급락한다. 해석 가능성도 낮다.</p>
+        </div>
+        <div class="comparison-card">
+          <h3>neuroGravity — 물리를 구조로, 신경망을 보정으로</h3>
+          <p>중력법칙의 수식 형태를 신경망 구조 안에 제약으로 심어 외삽의 골격을 확보하고, 그 위에 그래프 신경망을 얹어 맥락 의존적인 편차를 학습한다. 복원 정확도와 전이 가능성을 함께 확보하는 것이 설계 의도다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 4. 메타 중력 ===== -->
+    <section id="meta-gravity">
+      <h2>상수를 장소의 함수로: 메타 중력</h2>
+
+      <p>neuroGravity의 첫 번째 착상은 두 접근 사이에서 하나를 고르지 않는 것이다. 중력법칙의 형식은 그대로 두되, 고정 상수였던 <em>G</em>와 <em>α</em>를 장소의 함수로 바꾼다. 구체적으로는 두 구역의 건조환경 특징 벡터를 이어 붙인 값을 다층 퍼셉트론(multilayer perceptron, MLP)에 넣어 그 쌍에 해당하는 <em>G</em>와 <em>α</em>를 출력하게 한다. 저자들은 이 부분을 메타 중력(meta-Gravity)이라 부른다.</p>
+
+      <figure class="figure-canvas figure-architecture">
+        <canvas id="pipeline-canvas" role="img" aria-label="neuroGravity의 두 운용 모드 구조도. 인구와 OSM 특징에서 후보 간선을 고른 뒤, 도시 내부 복원에는 메타 중력을, 도시 간 전이에는 고전 중력을 사용해 물리적 밑그림을 만든다. 이 밑그림은 간선 강화 그래프 변환기의 초기 간선 특징과 어텐션 신호로 들어가 최종 통행량 추정으로 이어진다."></canvas>
+        <figcaption>neuroGravity의 정보 흐름. 도시 내부 복원은 쌍마다 <em>G</em>와 <em>α</em>를 추정하는 메타 중력을 기본으로 쓰고, 논문에 보고된 도시 간 전이는 이질적인 도시 쌍에서 더 안정적인 고전 중력을 사용한다. 두 모드 모두 물리적 추정을 최종 답이 아니라 그래프 변환기의 초기 간선 특징이자 어텐션 조절 신호로 넘긴다.</figcaption>
+      </figure>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">F<sup>g</sup><sub>ij</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">G(h<sup>0</sup><sub>i</sub> ⊕ h<sup>0</sup><sub>j</sub>) · P<sub>i</sub> P<sub>j</sub> ⁄ D<sub>ij</sub><sup>α(h<sup>0</sup><sub>i</sub> ⊕ h<sup>0</sup><sub>j</sub>)</sup></span>
+          </div>
+        </div>
+      </figure>
+
+      <p>여기서 <em>h</em><sup>0</sup>은 각 구역의 초기 특징 벡터이고 ⊕는 두 벡터를 이어 붙이는 연산이다. 특징은 52개로, 인구와 함께 건물 유형별 면적 비율, 토지이용 유형별 면적 비율, 제곱킬로미터당 시설(point of interest, POI) 밀도, 도로 등급별 제곱킬로미터당 연장이 들어간다. 모두 OSM과 공개 인구 자료에서 계산할 수 있는 값이다.</p>
+
+      <p>한 도시에 하나였던 매개변수가 이제 쌍마다 달라진다. 지하철로 이어진 도심축의 쌍에는 작은 α가, 도로 접근성이 낮은 주변부 쌍에는 큰 α가 배정될 수 있다. 결정적인 점은 이 값이 관측된 통행량에서 직접 적합되는 것이 아니라 <strong>건조환경 특징에서 예측된다</strong>는 데 있다. 그래서 도시 내부에서는 관측이 전혀 없는 구역 쌍에도 장소에 맞는 값을 부여할 수 있다. 다만 논문에 보고된 도시 간 전이는 이질적인 도시 사이에서 더 안정적인 고전 중력모형을 물리 파이프라인으로 사용했다. 전이 가능성은 특정 물리 모형 하나보다, 공개 특징만으로 물리적 골격을 만들고 그래프 신경망에 넘기는 전체 구조에서 나온다.</p>
+
+      <div class="callout">
+        <p class="callout-title">이 설계가 사는 자리</p>
+        <p>물리 모형에 자유도를 주되, 그 자유도를 관측이 아니라 지도에서 읽어 낸다. 관측이 없는 곳으로 모형을 옮길 수 있는지는 이 한 가지 선택에 달려 있다.</p>
+      </div>
+
+      <p>다만 메타 중력만으로는 부족하다. 중력법칙의 형식 자체가 여전히 강한 제약이어서, 인구와 거리로 환원되지 않는 흐름 — 특정 산업단지로 집중되는 통근이나 관광지의 비대칭 유입 같은 것 — 은 담기지 않는다. 저자들은 이 추정치를 최종 답이 아니라 <em>저충실도 밑그림</em>으로 규정하고, 다음 단계의 입력으로 넘긴다.</p>
+    </section>
+
+    <!-- ===== 5. GNN ===== -->
+    <section id="gnn">
+      <h2>밑그림 위에 얹는 그래프 신경망</h2>
+
+      <p>메타 중력이 만든 추정 <em>F</em><sup>g</sup>는 거리와 함께 그래프의 초기 간선 특징으로 들어간다. 그 위에서 간선 강화 그래프 변환기(edge-enhanced Graph-BERT)가 작동하며, 노드 임베딩과 간선 임베딩이 층마다 함께 갱신된다. 일반적인 그래프 신경망이 노드 정보만 주고받는 것과 달리 간선 자체가 상태를 갖고 갱신되므로, 두 지역 사이의 관계에 관한 정보가 층을 거치며 정교해진다.</p>
+
+      <p>물리 밑그림이 개입하는 방식이 이 구조의 핵심이다. 어텐션 가중치가 노드 임베딩뿐 아니라 간선 임베딩의 영향을 받는다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">Λ<sup>l</sup></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">Softmax ( (W<sub>Q</sub> h<sup>l</sup><sub>j</sub>) · (W<sub>K</sub> h<sup>l</sup><sub>i</sub> + W<sub>kE</sub> e<sup>l</sup><sub>ij</sub>) ⁄ √d )</span>
+          </div>
+        </div>
+      </figure>
+
+      <p>일반적인 그래프 어텐션과 다른 지점은 키(key) 항에 간선 임베딩 항 <em>W</em><sub>kE</sub><em>e</em><sub>ij</sub>가 더해진다는 것이다. 두 지역의 특징이 서로 비슷하다는 이유만으로 정보가 흐르지 않고, 물리 모형이 추정한 통행 가능성이 정보 전달의 세기를 함께 조절한다. 밑그림이 진할수록 그 연결로 더 많은 정보가 흐른다고 읽으면 된다.</p>
+
+      <h3>왜 로그 공간에서 추정하는가</h3>
+
+      <p>최종 통행량은 로그를 취한 공간에서 추정된다. 이유는 둘이다. 첫째, 중력법칙의 관계는 곱셈적이다. 정류선형함수(rectified linear unit, ReLU)를 쓰는 신경망은 입력의 가중합을 쌓는 데 능하지 곱과 거듭제곱을 직접 표현하지는 못한다. 로그를 취하면 곱은 합이 되고 거듭제곱은 계수 곱이 되어, 신경망이 다루기 좋은 선형 결합의 형태로 바뀐다. 둘째, 도시 통행량의 분포는 두꺼운 꼬리를 갖는다. 소수의 도심축 연결이 전체 통행의 큰 몫을 차지하고 대다수 쌍은 값이 작다. 원래 척도에서 학습하면 손실이 큰 값 몇 개에 지배되지만, 로그 척도에서는 분포가 고르게 펴져 여러 규모대에 걸친 패턴을 함께 학습할 수 있다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">log F̂<sub>ij</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">MLP(P<sub>i</sub>, P<sub>j</sub>, h<sub>i</sub>, h<sub>j</sub>, e<sub>ij</sub>) − α log D<sub>ij</sub> + ε</span>
+          </div>
+        </div>
+      </figure>
+
+      <p>식의 형태를 뜯어보면 중력법칙이 그대로 남아 있다. −α log <em>D</em><sub>ij</sub>는 거리 감쇠의 로그 표현이고, ε은 중력상수의 로그에 해당한다. 둘 다 학습되는 스칼라다. 신경망이 맡은 몫은 이 물리적 골격 위에 맥락 의존적인 보정을 얹는 것이다. 손실 함수에 물리식을 벌점으로 더하는 흔한 방식과 달리, 여기서는 구조 자체가 물리 형식을 보장한다. 저자들은 이를 물리 법칙의 수학적 형식을 신경망 안에 구조적 사전정보로 심는 방식이라고 설명한다.</p>
+    </section>
+
+    <!-- ===== 6. 학습 장치 ===== -->
+    <section id="training">
+      <h2>학습을 성립시키는 장치들</h2>
+
+      <p>여기까지가 모형의 뼈대라면, 다음은 관측 1%로 학습이 가능하도록 만드는 장치들이다.</p>
+
+      <p><strong>후보 간선 걸러 내기.</strong> 이동 네트워크는 성글다. 250개 구역이면 방향을 구분한 쌍이 62,250개 가능하지만 실제로 의미 있는 흐름이 존재하는 쌍은 51,786개다. 모든 쌍을 후보로 두면 계산의 상당 부분이 빈칸에 쓰이고, 0에 가까운 값들이 손실을 지배한다. 그래서 특징과 거리만으로 흐름의 존재 여부를 예측하는 LightGBM 이진 분류기를 앞단에 두어 후보 간선 집합을 먼저 만든다. 그래프 학습은 이 집합 위에서만 진행된다.</p>
+
+      <p><strong>이상치에 덜 휘둘리는 손실.</strong> 로그 공간의 잔차에 Huber 손실을 적용한다. 잔차가 작을 때는 제곱 손실처럼, 클 때는 절댓값 손실처럼 작동하는 함수로, 전환점 δ는 0.5로 두었다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">Q<sub>δ</sub>(r)</span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">½ r²&nbsp; (|r| ≤ δ)</span>
+          </div>
+          <div class="eq-line">
+            <span class="eq-lhs"></span>
+            <span class="eq-op"></span>
+            <span class="eq-rhs">δ (|r| − ½δ)&nbsp; (그 밖)</span>
+          </div>
+        </div>
+      </figure>
+
+      <p><strong>두 단계 학습.</strong> 먼저 메타 중력 쪽 손실만으로 물리 파이프라인을 사전 학습한 뒤, 두 파이프라인을 함께 학습한다. 물리 밑그림이 어느 정도 자리를 잡은 상태에서 신경망 보정이 시작되도록 순서를 정한 것이다.</p>
+
+      <p><strong>표본 가중.</strong> 관측이 극히 적은 few-shot 상황에서는 통행량이 큰 관측에 더 큰 가중을 준다. 가중치는 통행량을 온도 τ = 2로 나눈 값의 softmax로 정의된다. 표본이 희소할 때는 큰 흐름이 상대적으로 신뢰할 만하다는 판단이다. 반대로 관측이 충분한 도시 간 전이 학습에서는 모든 가중을 1로 두어, 모형이 지배적 패턴과 잡음을 스스로 구별하도록 둔다.</p>
+
+      <p><strong>조기 종료와 앙상블.</strong> 관측된 구역 중 20%의 내부 통행을 검증 자료로 떼어 두고, R²와 CPC가 100 에폭 동안 모두 개선되지 않으면 학습을 멈춘 뒤 검증 R²가 가장 높았던 지점으로 되돌린다. 도시 간 전이에서는 독립적으로 부표본한 이동 네트워크로 학습한 여러 기본 모형을 결합해 안정성을 확보한다.</p>
+
+    </section>
+
+    <!-- ===== 7. 결과: 복원 ===== -->
+    <section id="results">
+      <h2>얼마나 복원되는가</h2>
+
+      <p>평가는 보스턴, 로스앤젤레스, 샌프란시스코 베이 지역, 포르투, 보고타, 리야드 여섯 도시에서 이루어졌다. 지표는 두 가지다. R²는 실제 통행량의 분산 가운데 모형이 설명하는 비율이고, CPC(common part of commuters)는 실제 흐름 분포와 추정 흐름 분포가 겹치는 부분의 비율이다. CPC는 각 쌍에서 두 값 중 작은 쪽을 모두 더해 전체 합으로 나눈 값으로, 0이면 전혀 겹치지 않고 1이면 완전히 일치한다. R²가 큰 흐름의 오차에 민감한 반면 CPC는 분포 전체의 형태를 본다.</p>
+
+      <p>구역의 10%만 관측된 조건에서의 결과는 다음과 같다. 괄호 안은 같은 조건에서의 중력모형 값이다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">보스턴</span>
+          <span class="data-value">R² 0.77 · CPC 0.73</span>
+          <span class="data-note">중력모형 R² 0.59 · CPC 0.63. 51,786개 쌍 가운데 496개(약 1%)만 관측한 조건.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">로스앤젤레스</span>
+          <span class="data-value">R² 0.70</span>
+          <span class="data-note">다핵 구조 도시. 흐름이 여러 중심으로 분산되어 있다.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">SF 베이</span>
+          <span class="data-value">R² 0.60</span>
+          <span class="data-note">여섯 도시 가운데 복원이 상대적으로 어려운 축에 속한다.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">여섯 도시 평균</span>
+          <span class="data-value">+38%</span>
+          <span class="data-note">평균 R² 기준 가장 강한 기준선인 순수 그래프 신경망 대비 개선폭.</span>
+        </div>
+      </div>
+
+      <p>복원된 흐름의 공간 패턴을 보면 차이가 더 분명하다. 중력모형은 흐름을 도심 주변으로 집중시켜 주변부 연결을 뭉개는 반면, neuroGravity가 복원한 분포는 주요 통행 축과 고밀도 지역을 실제 패턴에 가깝게 재현했다.</p>
+
+      <figure class="figure-canvas figure-comparison">
+        <canvas id="flow-comparison-canvas" role="img" aria-label="관측 흐름, 고전 중력모형, neuroGravity의 복원 패턴을 비교한 개념도. 관측 흐름에는 중심 연결과 주변부 횡단 연결이 함께 있고, 중력모형은 중심 연결에 과도하게 집중하며, neuroGravity는 중심축과 주변부 연결을 함께 복원한다."></canvas>
+        <figcaption>복원 패턴의 차이를 같은 가상 도시 위에 나타낸 설명용 모식도. 선의 굵기는 통행량을 뜻한다. 고전 중력모형은 중심부로 향하는 흐름은 살리지만 주변부의 횡단 연결을 놓치고, neuroGravity는 물리적 골격을 유지하면서 그 연결을 상당 부분 되살린다. 실제 도시 자료를 그린 지도가 아니라 논문 Fig. 3과 본문의 관찰을 단순화한 도해다.</figcaption>
+      </figure>
+
+      <p>관측 비율을 0.1에서 0.9까지 올리며 30회씩 독립 실험한 결과에서는 예상 밖의 경향이 나타났다. neuroGravity는 관측이 늘수록 R²와 CPC가 함께 올라간 반면, 중력모형은 관측이 늘수록 R²가 오히려 <em>떨어졌다</em>. 저자들의 설명은 이렇다. 중력법칙은 흐름의 광범위한 분포는 잘 포착하지만 특정 연결의 값은 맞히지 못한다. 관측 표본이 늘어나면 평균적 경향에서 벗어난 사례가 더 많이 포함되고, 그럴수록 설명력이 낮아진다. 자료를 더 주어도 나아지지 않는 모형이라는 뜻이며, 표현력의 상한이 어디인지를 보여 준다.</p>
+    </section>
+
+    <!-- ===== 8. 임베딩 ===== -->
+    <section id="embeddings">
+      <h2>임베딩이 이미 알고 있던 것</h2>
+
+      <p>모형을 학습시키면 부산물로 각 구역의 벡터 표현, 곧 노드 임베딩이 남는다. 저자들이 이 표현을 들여다보다 발견한 것이 논문의 두 번째 결과다. 소득 자료를 한 번도 입력받은 적이 없는데도 임베딩이 사회경제적 구조를 담고 있었다.</p>
+
+      <p>보스턴 우편구역들의 임베딩을 UMAP으로 2차원에 투영하고 가구 중위소득으로 색을 입히면, 소득 수준이 비슷한 구역끼리 모인다. 지리적으로 멀리 떨어진 구역 쌍이 임베딩 공간에서는 한 덩어리를 이루는 반면, 경계를 맞대고 있어도 소득이 다르면 뚜렷이 갈라진다. 62,250개 구역 쌍 전체를 놓고 보면 임베딩 거리가 멀어질수록 소득 격차의 중앙값이 단조롭게 커졌다. 이동 패턴을 학습하는 것만으로 소득의 공간 구조가 표현에 새겨진 셈이다.</p>
+
+      <p>이 표현이 실제로 얼마나 쓸모 있는지는 회귀로 확인했다. OSM 속성과 노드 임베딩을 함께 넣어 경사부스팅(gradient boosting machine, GBM) 모형을 학습한 결과는 다음과 같다. 값은 20회 반복한 5겹 교차검증의 평균과 표준편차다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">NO₂ 농도</span>
+          <span class="data-value">0.78 ± 0.01</span>
+          <span class="data-note">교통 배출과 직접 연결된 지표.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">회전반경</span>
+          <span class="data-value">0.76 ± 0.02</span>
+          <span class="data-note">거주자의 평균적인 이동 범위를 나타내는 값.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">가구 탄소발자국</span>
+          <span class="data-value">0.73 ± 0.02</span>
+          <span class="data-note">통행 수단과 거리에 크게 좌우된다.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">가구 중위소득</span>
+          <span class="data-value">0.42 ± 0.02</span>
+          <span class="data-note">이동 자료와의 거리가 앞의 세 지표보다 멀다.</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">학사학위 비율</span>
+          <span class="data-value">0.35 ± 0.03</span>
+          <span class="data-note">다섯 지표 가운데 가장 낮은 설명력.</span>
+        </div>
+      </div>
+
+      <p>지표별 편차가 말해 주는 바가 있다. 통행 자체에 가까운 지표일수록 잘 맞고, 순수한 경제·교육 지표로 갈수록 설명력이 떨어진다. 이동에 새겨지는 것은 소득 그 자체가 아니라 소득이 만들어 낸 통행 거리와 배출의 흔적에 가깝다고 읽는 편이 정확하다.</p>
+
+      <p>OSM 속성만 쓸 때, 임베딩만 쓸 때, 둘을 합칠 때를 비교하면 결합이 가장 좋았다. 임베딩이 OSM 특징에 없는 이동 관련 정보를 추가로 담고 있다는 뜻이다. 임베딩을 주성분분석(PCA)으로 네 성분으로 압축한 뒤 세 도시 다섯 지표에 대해 SHAP 기여도를 계산했을 때, 그중 두 성분이 전체 25개 변수 가운데 1위와 3위에 올랐다.</p>
+
+      <p>다만 효과는 도시 구조를 탄다. 임베딩을 추가했을 때의 개선폭은 단핵 구조인 보스턴에서 가장 컸고 샌프란시스코 베이에서 중간, 다핵 구조인 로스앤젤레스에서 가장 작았다. 회전반경 추정은 로스앤젤레스에서 R² −0.07 ± 0.05, 샌프란시스코 베이에서 0.13 ± 0.05로 사실상 실패했다. 보스턴처럼 도심이 하나인 도시에서는 교외 거주자가 중심부로 향하는 구심적 통행이 지배적이어서 이동 거리와 사회경제적 지표가 강하게 얽히지만, 중심이 여럿인 도시에서는 지역의 기능이 뒤섞이고 그 관계가 흐려진다.</p>
+    </section>
+
+    <!-- ===== 9. 전이 ===== -->
+    <section id="transfer">
+      <h2>다른 도시로 옮기기</h2>
+
+      <p>관측이 전혀 없는 도시에 모형을 적용하는 것이 애초의 목표였다. 보스턴 자료로 학습한 모형을 네 도시에 그대로 적용한 결과는 다음과 같다.</p>
+
+      <figure class="figure-canvas">
+        <canvas id="transfer-bar" role="img" aria-label="보스턴에서 학습한 모형을 관측 없이 네 도시에 적용했을 때의 R² 막대그래프. 로스앤젤레스 0.69, 샌프란시스코 베이 0.61, 보고타 0.48, 리우데자네이루 0.42이며, 앞의 두 도시에는 현지 10% 관측으로 학습한 모형의 값 0.70과 0.60이 함께 표시되어 있다."></canvas>
+        <figcaption>보스턴에서 학습한 모형의 무관측 전이 성능(막대)과, 해당 도시에서 10% 관측으로 직접 학습한 모형의 성능(점선). 로스앤젤레스와 샌프란시스코 베이에서는 두 값이 거의 일치한다. 논문 Fig. 5a의 값.</figcaption>
+      </figure>
+
+      <p>로스앤젤레스와 샌프란시스코 베이의 결과가 특히 눈에 띈다. 두 도시에서 10% 관측으로 직접 학습한 모형은 각각 R² 0.70과 0.60이었는데, 보스턴 모형을 관측 없이 옮긴 결과가 0.69와 0.61이다. 이 두 도시에 관한 한 현지 관측을 확보하는 것과 보스턴 모형을 가져다 쓰는 것 사이에 실질적인 차이가 없다는 뜻이 된다.</p>
+
+      <p>보고타와 리우데자네이루는 사정이 달랐다. 0.48과 0.42로, 미국 도시들과 뚜렷한 간격이 벌어진다. 전이가 성립하는 조건과 성립하지 않는 조건을 가르는 것이 무엇인지가 다음 질문이 된다.</p>
+
+      <p>덧붙여 이 전이는 자료원을 가리지 않았다. 저자들은 통화 기록(call detail records, CDR), 위치 기반 서비스(location-based services, LBS) 자료, 센서스 통근 자료 세 가지로 만든 이동 네트워크에서 모두 전이가 유지됨을 확인했다. 통화 기록 기반 시험에서는 가장 좋은 기준선 대비 R²가 평균 약 두 배(+99%)로 올랐다.</p>
+    </section>
+
+    <!-- ===== 10. 공간 소득 분리 ===== -->
+    <section id="segregation">
+      <h2>전이를 지배하는 변수: 공간 소득 분리</h2>
+
+      <p>저자들이 지목한 답은 소득의 <em>공간적</em> 분리다. 어떤 도시에 부유한 지역과 가난한 지역이 존재한다는 사실 자체가 아니라, 그 격차가 공간에 어떻게 배치되어 있는지가 문제라는 것이다. 소득 수준이 다른 사람들이 지역 단위로 뒤섞여 있는 도시와, 부유한 구역들이 한쪽에 몰리고 가난한 구역들이 반대편에 몰려 있는 도시는 소득 분포가 같아도 이동 패턴이 다르게 형성된다.</p>
+
+      <figure class="figure-canvas figure-si-concept">
+        <canvas id="si-concept-canvas" role="img" aria-label="같은 소득 분포를 가진 두 가상 도시의 공간 배치를 비교한 도해. 낮은 공간 소득 분리 도시에서는 두 소득 집단이 작은 구역 단위로 섞이고, 높은 공간 소득 분리 도시에서는 같은 집단이 큰 덩어리로 나뉜다."></canvas>
+        <figcaption>전체 소득분포가 같아도 공간 배치는 다를 수 있다. 왼쪽처럼 서로 다른 소득 구역이 섞이면 덩어리 사이 차이인 <em>BI</em><sub>inter</sub>가 작아 SI가 낮고, 오른쪽처럼 큰 공간 덩어리로 갈리면 <em>BI</em><sub>inter</sub>가 커져 SI가 높아진다. 색은 실제 소득값이 아니라 두 소득 집단을 구분하기 위한 범례다.</figcaption>
+      </figure>
+
+      <p>이를 하나의 수로 요약하기 위해 도입한 것이 공간 소득 분리 지수(spatial income segregation index, SI)다. 계산은 세 단계로 이루어진다. 먼저 소득이 비슷한 인접 구역들을 병합해 도시를 <em>K</em>개의 큰 덩어리로 묶는다. 다음으로 도시 전체의 소득 분리량을 덩어리 사이의 분리와 덩어리 내부의 분리로 나눈다. 마지막으로 앞의 것이 전체에서 차지하는 비율을 구한다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">BI<sub>global</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">BI<sub>inter</sub> + BI<sub>intra</sub></span>
+          </div>
+          <div class="eq-line">
+            <span class="eq-lhs">SI</span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">BI<sub>inter</sub> ⁄ (BI<sub>inter</sub> + BI<sub>intra</sub>)</span>
+          </div>
+        </div>
+      </figure>
+
+      <p>여기서 분리량의 척도로 쓰인 브레그만 정보(Bregman information)는 제곱오차를 쓸 경우 <strong>지역 소득의 인구가중 분산</strong>과 정확히 같아진다. 그리고 브레그만 정보의 연쇄 규칙이 보장하는 위 분해는 총분산을 급간분산과 급내분산으로 나누는 분산분석의 구조와 동일하다. 요컨대 SI는 도시의 소득 분산 가운데 몇 퍼센트가 덩어리 <em>사이</em>의 차이로 설명되는가를 묻는다. SI가 0이면 소득 격차가 공간과 무관하게 흩어져 있어 넓은 단위로 집계하면 격차가 사라진다. SI가 1이면 격차가 전적으로 덩어리 사이의 경계에 놓이고 덩어리 안에서는 소득이 균일하다.</p>
+
+      <p>다섯 도시의 값은 다음과 같다. 보스턴 0.609, 로스앤젤레스 0.627, 샌프란시스코 베이 0.644, 보고타 0.869, 리우데자네이루 0.957. 미국 세 도시가 좁은 구간에 모여 있고 남미 두 도시가 크게 떨어져 있다.</p>
+
+      <figure class="figure-canvas">
+        <canvas id="si-canvas" role="img" aria-label="출발 도시와 대상 도시의 공간 소득 분리 지수 차이가 커질수록 전이 정확도가 낮아지는 관계를 다섯 도시별 산점과 회귀선으로 나타낸 그래프."></canvas>
+        <figcaption>다섯 도시를 서로 출발지와 대상지로 바꿔 가며 전이했을 때의 정확도(R²)와, 두 도시의 SI 차이. 선은 출발 도시별 최소제곱 적합이다. 모든 선이 오른쪽으로 내려가고, SI가 낮은 도시에서 출발한 선일수록 위쪽에 놓인다. 논문 Fig. 5b·5d의 값.</figcaption>
+      </figure>
+
+      <p>그림에서 두 가지 규칙성이 읽힌다. 첫째, 출발 도시와 대상 도시의 SI 차이가 벌어질수록 전이 정확도가 낮아진다. 둘째, 같은 SI 차이라면 <em>출발 도시의 SI가 낮을수록</em> 전이가 잘 된다. 분리가 덜한 도시에서 학습한 모형이 더 일반적인 규칙을 익힌다는 뜻으로, 저자들은 그런 도시의 이동 패턴이 다양한 도시 환경과 양립할 수 있기 때문이라고 해석한다.</p>
+
+      <p>이 관계는 정량적으로도 강하다. SI 차이에 행정구역 면적 분포와 OSM 특징 밀도를 더해 여덟 개 변수로 전이 R²를 예측하는 선형회귀는 적합 R² 0.97에 이르렀다. 절댓값 기준 가장 큰 계수는 SI 차이였고, 그다음이 출발 도시의 SI, 그다음이 대상 도시의 SI였다. 모형을 옮기기 전에 전이가 얼마나 잘 될지를 소득 통계만으로 가늠할 수 있다는 뜻이며, 실무적으로는 이것이 결과 못지않게 유용하다.</p>
+    </section>
+
+    <!-- ===== 11. 한계와 전망 ===== -->
+    <section id="limits">
+      <h2>한계와 전망</h2>
+
+      <p>이 방법의 취약점은 전제에 있다. 모든 것이 OSM 위에 서 있는데, OSM의 완결성은 지역마다 크게 다르다. 어떤 지역은 건물의 80% 이상이 등재되어 있지만 어떤 지역은 20%에 못 미친다. 저자들은 특징 정규화와 드롭아웃으로 이 영향을 완화하도록 설계했고, 특징 결측률 30%까지는 성능이 안정적임을 실험으로 확인했다.</p>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">도구가 가장 필요한 곳에서 가장 취약하다</p>
+        <p>저자들이 직접 적은 대로, 남반구의 가장 어려운 사례들에서는 결측률이 30%라는 문턱을 넘는다. 자료 공백을 메우려고 만든 도구가 자료 공백이 가장 심한 곳에서 신뢰도를 잃는 구조적 긴장이 남아 있으며, 이는 모형이 아니라 지도 자체의 완결성을 높여야 풀리는 문제다.</p>
+      </div>
+
+      <p>남은 한계도 분명히 기록되어 있다. 구글 AlphaEarth 위성 영상 임베딩을 특징에 단순히 이어 붙이는 방식은 개선폭이 미미했다. 저자들은 이 단순한 결합 방식이 최적이 아닐 것으로 보고, 도시의 의미 구조를 더 잘 담는 시각 인코더가 필요하다고 적었다. 사회경제 지표 추정에서 다핵 도시일수록 효과가 줄어드는 현상도 원인이 규명되지 않은 채 남아 있다.</p>
+
+      <p>그럼에도 결과물의 범위는 넓다. 이 모형으로 추정한 이동 네트워크는 전 세계 1,200개 이상의 도시와 지역에 대해 공개되었고, 사하라 이남 아프리카 두 지역에서는 실제 통행조사와 대조해 관측 패턴과의 정합성을 확인했다. 로스앤젤레스와 샌프란시스코 베이에서 복원 흐름으로 구동한 감염병 확산 모형은 실측 흐름으로 구동한 경우와 유사한 궤적을 보였다.</p>
+
+      <p>향후 방향으로는 두 갈래가 눈에 띈다. 하나는 위성 영상과 건조환경 정보를 결합하는 더 나은 방식을 찾는 것이고, 다른 하나는 SI 지수 자체를 도시 연구의 도구로 쓰는 것이다. 이 논문에서 SI는 전이 가능성의 예측 변수로 도입되었지만, 그 자체로는 도시의 소득 분리를 비교 가능한 하나의 수로 요약한다. 자료가 갖춰진 국가들에 이를 적용해 도시계획 정책과의 관계를 분석하는 작업이 가능할 것으로 보인다. 이동 자료의 대리물을 만드는 연구가 도시 불평등을 재는 척도를 함께 남긴 셈이다.</p>
+    </section>
+
+  </div>
+
+  <section class="article-refs">
+    <h2>References</h2>
+    <ul class="references">
+      <li>Yang, J., Huang, S., Huang, Z., Jin, Y., Yang, X., González, M. C., &amp; Xu, Y. (2026). Transferable human mobility network reconstruction with neuroGravity. <em>Nature Computational Science</em>.
+          <a href="https://doi.org/10.1038/s43588-026-01003-y">https://doi.org/10.1038/s43588-026-01003-y</a></li>
+      <li>Zipf, G. K. (1946). The P<sub>1</sub>P<sub>2</sub>/D hypothesis: On the intercity movement of persons. <em>American Sociological Review, 11</em>, 677–686.</li>
+      <li>Simini, F., González, M. C., Maritan, A., &amp; Barabási, A.-L. (2012). A universal model for mobility and migration patterns. <em>Nature, 484</em>, 96–100.
+          <a href="https://doi.org/10.1038/nature10856">https://doi.org/10.1038/nature10856</a></li>
+      <li>Simini, F., Barlacchi, G., Luca, M., &amp; Pappalardo, L. (2021). A Deep Gravity model for mobility flows generation. <em>Nature Communications, 12</em>, 6576.
+          <a href="https://doi.org/10.1038/s41467-021-26752-4">https://doi.org/10.1038/s41467-021-26752-4</a></li>
+      <li>Chodrow, P. S. (2017). Structure and information in spatial segregation. <em>Proceedings of the National Academy of Sciences, 114</em>, 11591–11596.</li>
+      <li>Banerjee, A., Merugu, S., Dhillon, I. S., &amp; Ghosh, J. (2005). Clustering with Bregman divergences. <em>Journal of Machine Learning Research, 6</em>, 1705–1749.</li>
+      <li>Moro, E., Calacci, D., Dong, X., &amp; Pentland, A. (2021). Mobility patterns are associated with experienced income segregation in large US cities. <em>Nature Communications, 12</em>, 1–10.</li>
+      <li>Nilforoshan, H., et al. (2023). Human mobility networks reveal increased segregation in large cities. <em>Nature, 624</em>, 586–592.</li>
+      <li>Zhang, J., Zhang, H., Xia, C., &amp; Sun, L. (2020). <em>Graph-BERT: Only attention is needed for learning graph representations</em> [Preprint]. arXiv.
+          <a href="https://doi.org/10.48550/arXiv.2001.05140">https://doi.org/10.48550/arXiv.2001.05140</a></li>
+      <li>Ke, G., Meng, Q., Finley, T., Wang, T., Chen, W., Ma, W., Ye, Q., &amp; Liu, T.-Y. (2017). LightGBM: A highly efficient gradient boosting decision tree. <em>Advances in Neural Information Processing Systems, 30</em>, 3149–3157.</li>
+      <li>Karniadakis, G. E., et al. (2021). Physics-informed machine learning. <em>Nature Reviews Physics, 3</em>, 422–440.</li>
+      <li>Herfort, B., Lautenbach, S., Porto de Albuquerque, J., Anderson, J., &amp; Zipf, A. (2023). A spatio-temporal analysis investigating completeness and inequalities of global urban building data in OpenStreetMap. <em>Nature Communications, 14</em>, 3985.</li>
+    </ul>
+  </section>
+
+  <p class="colophon">
+    본 고는 Yang 외(2026)의 <em>Nature Computational Science</em> 논문 본문과 방법 절에 기초한 해설이다. 수치는 모두 해당 논문에서 인용했다. 거리 감쇠 지수 탐색기의 점 값, 복원 공간 패턴 비교의 가상 네트워크, 공간 소득 분리 개념도의 격자는 설명을 위해 합성한 것으로 논문의 원자료가 아니다. 보조자료에 실린 추가 검증(순위 기반 지표, 결측 민감도 실험, 도시별 상세 비교)은 다루지 않았다. 모형 구현은 <a href="https://github.com/urbanmobility/NeuroGravity">github.com/urbanmobility/NeuroGravity</a>에, 1,200여 개 도시의 추정 이동 네트워크는 Zenodo(<a href="https://doi.org/10.5281/zenodo.19727864">10.5281/zenodo.19727864</a>)에 공개되어 있다.
+  </p>
+
+  <nav class="article-end-nav">
+    <a href="../briefs.html">← 브리프 목록</a>
+  </nav>
+
+</article>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href="mailto:khkim@kei.re.kr">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+      </svg>
+      khkim@kei.re.kr
+    </a>
+    <div class="address">
+      Bldg. B, Sejong National Research Complex<br>
+      370 Sicheong-daero, Sejong 30147, Republic of Korea
+    </div>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const INK   = '#0f1624',
+        BLUE  = '#009fde',
+        GREEN = '#00ab84',
+        AMBER = '#ff8a2a',
+        WARN  = '#c46411',
+        BG    = '#f6f0e3',
+        LINE  = 'rgba(15,22,36,.12)',
+        SOFT  = 'rgba(15,22,36,.07)',
+        MUTED = 'rgba(15,22,36,.62)',
+        FAINT = 'rgba(15,22,36,.38)';
+  const FF = "'Paperlogy','Pretendard Variable','Inter',sans-serif";
+  const lazyActivators = [];
+
+  function setup(cvs, hDesk, hMob) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = cvs.parentElement.clientWidth;
+    const h = window.innerWidth < 768 ? hMob : hDesk;
+    cvs.width = Math.max(1, Math.round(w * dpr));
+    cvs.height = Math.max(1, Math.round(h * dpr));
+    const ctx = cvs.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    return { ctx, w, h };
+  }
+
+  function lazy(el, fn) {
+    let activated = false;
+    const activate = () => {
+      if (activated) return;
+      activated = true;
+      fn();
+    };
+    lazyActivators.push(activate);
+    if (!('IntersectionObserver' in window)) {
+      activate();
+      return;
+    }
+    const obs = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { obs.disconnect(); activate(); }
+    }), { threshold: 0.05 });
+    obs.observe(el);
+  }
+
+  window.addEventListener('beforeprint', () => {
+    lazyActivators.forEach(activate => activate());
+  });
+
+  function onResize(fn) {
+    let t;
+    window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(fn, 130); });
+  }
+
+  function rrect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function arrow(ctx, x1, y1, x2, y2, color) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = color; ctx.lineWidth = 1.3; ctx.stroke();
+    const a = Math.atan2(y2 - y1, x2 - x1), s = 5;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - s * Math.cos(a - 0.42), y2 - s * Math.sin(a - 0.42));
+    ctx.lineTo(x2 - s * Math.cos(a + 0.42), y2 - s * Math.sin(a + 0.42));
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  /* ── 1. 관측 시나리오 세 가지 ───────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('obs-canvas');
+    if (!cvs) return;
+    const N = 50;
+    const panels = [
+      { t: '무작위 관측',       s: '흩어진 쌍',        c: FAINT, on: (i, j) => ((i * 37 + j * 61) % 89) < 2 },
+      { t: '일부 구역의 유출입', s: '행과 열 전체',      c: FAINT, on: (i, j) => (i > 6 && i < 10) || (j > 30 && j < 34) },
+      { t: '내부 관측',         s: '이 연구가 다루는 조건', c: BLUE, on: (i, j) => i < 5 && j < 5 }
+    ];
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 320, 260);
+      const gap = w < 480 ? 10 : 20;
+      const labelH = 44;
+      const s = Math.min(Math.floor((w - gap * 2 - 8) / 3), h - labelH - 10);
+      const tot = s * 3 + gap * 2;
+      const x0 = (w - tot) / 2, y0 = 6;
+      const cs = s / N;
+
+      panels.forEach((p, k) => {
+        const px = x0 + k * (s + gap);
+        ctx.fillStyle = SOFT;
+        ctx.fillRect(px, y0, s, s);
+        ctx.fillStyle = p.c;
+        for (let i = 0; i < N; i++) {
+          for (let j = 0; j < N; j++) {
+            if (p.on(i, j)) ctx.fillRect(px + j * cs, y0 + i * cs, Math.ceil(cs), Math.ceil(cs));
+          }
+        }
+        ctx.strokeStyle = k === 2 ? BLUE : LINE;
+        ctx.lineWidth = k === 2 ? 1.6 : 1;
+        ctx.strokeRect(px + .5, y0 + .5, s - 1, s - 1);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = k === 2 ? INK : MUTED;
+        ctx.font = (k === 2 ? '600 ' : '') + '13px ' + FF;
+        ctx.fillText(p.t, px + s / 2, y0 + s + 21);
+        ctx.fillStyle = MUTED;
+        ctx.font = '11.5px ' + FF;
+        ctx.fillText(p.s, px + s / 2, y0 + s + 38);
+      });
+      ctx.textAlign = 'left';
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { draw(); onResize(draw); });
+  })();
+
+  /* ── 2. 거리 감쇠 지수 탐색기 ───────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('alpha-explorer');
+    if (!cvs) return;
+    const slider = document.getElementById('alpha-slider');
+    const valEl  = document.getElementById('alpha-val');
+    const reset  = document.getElementById('alpha-reset');
+
+    // 설명용 합성 자료: 두 무리가 서로 다른 감쇠율을 따른다 (논문 자료 아님)
+    const A = [[2, 4400], [4, 1870], [7, 1120], [11, 600], [16, 455], [22, 281], [30, 222]];
+    const B = [[2, 3750], [4, 700], [7, 143], [11, 50], [16, 17], [22, 8.4], [30, 3.2]];
+    const ALL = A.concat(B).map(([d, f]) => [Math.log10(d), Math.log10(f)]);
+
+    const XL = Math.log10(1.5), XR = Math.log10(38);
+    const YB = Math.log10(2),   YT = Math.log10(9000);
+    let alpha = parseFloat(slider.value);
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 380, 320);
+      const P = { l: 54, r: w - 14, t: 34, b: h - 40 };
+      const sx = v => P.l + (v - XL) / (XR - XL) * (P.r - P.l);
+      const sy = v => P.b - (v - YB) / (YT - YB) * (P.b - P.t);
+
+      // 최적 절편과 잔차
+      let b = 0;
+      for (const [x, y] of ALL) b += y + alpha * x;
+      b /= ALL.length;
+      let sse = 0;
+      for (const [x, y] of ALL) { const r = y - (b - alpha * x); sse += r * r; }
+
+      // 격자
+      ctx.font = '11.5px ' + FF;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      [10, 100, 1000].forEach(v => {
+        const y = sy(Math.log10(v));
+        ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(P.r, y);
+        ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(String(v), P.l - 8, y);
+      });
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      [2, 5, 10, 20, 30].forEach(v => {
+        const x = sx(Math.log10(v));
+        ctx.beginPath(); ctx.moveTo(x, P.b); ctx.lineTo(x, P.b + 4);
+        ctx.strokeStyle = LINE; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(String(v), x, P.b + 8);
+      });
+      ctx.fillStyle = MUTED; ctx.font = '12px ' + FF;
+      ctx.fillText('두 구역 사이의 거리 (km)', (P.l + P.r) / 2, h - 17);
+      ctx.save();
+      ctx.translate(18, (P.t + P.b) / 2); ctx.rotate(-Math.PI / 2);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('하루 통행량', 0, 0);
+      ctx.restore();
+
+      // 적합선
+      ctx.beginPath();
+      ctx.moveTo(sx(XL), sy(b - alpha * XL));
+      ctx.lineTo(sx(XR), sy(b - alpha * XR));
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.9; ctx.stroke();
+
+      // 잔차 선
+      ctx.strokeStyle = 'rgba(15,22,36,.22)'; ctx.lineWidth = 1;
+      for (const [x, y] of ALL) {
+        ctx.beginPath();
+        ctx.moveTo(sx(x), sy(y)); ctx.lineTo(sx(x), sy(b - alpha * x));
+        ctx.stroke();
+      }
+
+      // 점
+      const plot = (arr, color) => {
+        for (const [d, f] of arr) {
+          ctx.beginPath();
+          ctx.arc(sx(Math.log10(d)), sy(Math.log10(f)), 4.4, 0, Math.PI * 2);
+          ctx.fillStyle = color; ctx.fill();
+          ctx.strokeStyle = BG; ctx.lineWidth = 1.5; ctx.stroke();
+        }
+      };
+      plot(A, BLUE);
+      plot(B, AMBER);
+
+      // 범례 + 잔차
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.font = '12.5px ' + FF;
+      let lx = P.l, ly = 14;
+      [['도심축 쌍 — 완만한 감쇠', BLUE], ['주변부 쌍 — 급격한 감쇠', AMBER]].forEach(([t, c]) => {
+        ctx.beginPath(); ctx.arc(lx + 4, ly, 4.2, 0, Math.PI * 2);
+        ctx.fillStyle = c; ctx.fill();
+        ctx.fillStyle = MUTED; ctx.fillText(t, lx + 14, ly);
+        lx += 20 + ctx.measureText(t).width;
+      });
+      ctx.textAlign = 'right';
+      ctx.fillStyle = INK; ctx.font = '600 12.5px ' + FF;
+      ctx.fillText('로그 잔차 제곱합  ' + sse.toFixed(2), P.r, ly);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    function sync() {
+      alpha = parseFloat(slider.value);
+      valEl.textContent = alpha.toFixed(2);
+      draw();
+    }
+    slider.addEventListener('input', sync);
+    reset.addEventListener('click', () => { slider.value = '1.80'; sync(); });
+    lazy(cvs.closest('.explorer-box'), () => { sync(); onResize(draw); });
+  })();
+
+  /* ── 3. 두 운용 모드를 포함한 모형 구조 ─────────────────────── */
+  (function () {
+    const cvs = document.getElementById('pipeline-canvas');
+    if (!cvs) return;
+
+    function box(ctx, x, y, w, h, title, sub, color, tag) {
+      rrect(ctx, x, y, w, h, 5);
+      ctx.fillStyle = color === FAINT ? 'rgba(15,22,36,.025)' : color.replace(')', ',.055)').replace('rgb', 'rgba');
+      if (color === BLUE) ctx.fillStyle = 'rgba(0,159,222,.055)';
+      if (color === GREEN) ctx.fillStyle = 'rgba(0,171,132,.055)';
+      if (color === AMBER) ctx.fillStyle = 'rgba(255,138,42,.055)';
+      ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.35; ctx.stroke();
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      if (tag) {
+        ctx.font = '600 10.5px ' + FF;
+        const tw = ctx.measureText(tag).width + 14;
+        rrect(ctx, x + 12, y + 10, tw, 20, 10);
+        ctx.fillStyle = color; ctx.fill();
+        ctx.fillStyle = BG; ctx.fillText(tag, x + 19, y + 20.5);
+      }
+      const ty = tag ? y + 45 : y + h / 2 - 8;
+      ctx.fillStyle = INK; ctx.font = '600 13px ' + FF;
+      ctx.fillText(title, x + 14, ty);
+      ctx.fillStyle = MUTED; ctx.font = '11.5px ' + FF;
+      ctx.fillText(sub, x + 14, ty + 21);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 390, 470);
+      const mobile = w < 560;
+      if (!mobile) {
+        const pad = 4, gap = 24;
+        const colW = (w - pad * 2 - gap * 4) / 5;
+        const y = 118, bh = 92;
+        const x0 = pad, x1 = x0 + colW + gap, x2 = x1 + colW + gap;
+        const x3 = x2 + colW + gap, x4 = x3 + colW + gap;
+
+        box(ctx, x0, y, colW, bh, '공개 지역 특징', '인구 · OSM 52개 지표', FAINT);
+        box(ctx, x1, y, colW, bh, '연결 후보 판별', 'LightGBM · 후보 간선 ε', FAINT);
+        box(ctx, x2, 54, colW, 96, '메타 중력', '쌍별 G · α → Fᵍ', BLUE, '내부 복원');
+        box(ctx, x2, 178, colW, 96, '고전 중력', '도시별 G · α → Fᵍ', AMBER, '도시 간 전이');
+        box(ctx, x3, y, colW, bh, '간선 강화 GNN', '어텐션 · 로그 공간', GREEN);
+        box(ctx, x4, y, colW, bh, 'OD 통행량', '최종 추정 F̂', GREEN);
+
+        arrow(ctx, x0 + colW + 6, y + bh / 2, x1 - 6, y + bh / 2, FAINT);
+        arrow(ctx, x1 + colW + 6, y + bh / 2, x2 - 6, 102, BLUE);
+        arrow(ctx, x1 + colW + 6, y + bh / 2, x2 - 6, 226, AMBER);
+        arrow(ctx, x2 + colW + 6, 102, x3 - 6, y + 31, BLUE);
+        arrow(ctx, x2 + colW + 6, 226, x3 - 6, y + 61, AMBER);
+        arrow(ctx, x3 + colW + 6, y + bh / 2, x4 - 6, y + bh / 2, GREEN);
+
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = MUTED; ctx.font = '11.5px ' + FF;
+        ctx.fillText('공통 입력', (x0 + x1 + colW) / 2, 294);
+        ctx.fillText('작업에 따라 물리 파이프라인 선택', x2 + colW / 2, 294);
+        ctx.fillText('Fᵍ가 초기 간선 특징과 어텐션 신호로 작동', (x3 + x4 + colW) / 2, 294);
+
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(x2, 314); ctx.lineTo(x2 + colW, 314);
+        ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = INK; ctx.font = '600 12px ' + FF;
+        ctx.fillText('물리적 골격', x2 + colW / 2, 340);
+        ctx.fillStyle = MUTED; ctx.font = '11.5px ' + FF;
+        ctx.fillText('최종 답이 아니라 신경망 보정의 출발점', x2 + colW / 2, 362);
+      } else {
+        const pad = 4, bw = w - pad * 2, bh = 62;
+        const y0 = 4, y1 = 82, branchY = 160, branchGap = 10;
+        const branchW = (bw - branchGap) / 2;
+        const y3 = 272, y4 = 350;
+        box(ctx, pad, y0, bw, bh, '공개 지역 특징', '인구 · OSM 52개 지표', FAINT);
+        box(ctx, pad, y1, bw, bh, '연결 후보 판별', 'LightGBM · 후보 간선 ε', FAINT);
+        box(ctx, pad, branchY, branchW, 92, '메타 중력', '쌍별 G · α', BLUE, '내부 복원');
+        box(ctx, pad + branchW + branchGap, branchY, branchW, 92, '고전 중력', '도시별 G · α', AMBER, '도시 간 전이');
+        box(ctx, pad, y3, bw, bh, '간선 강화 그래프 변환기', 'Fᵍ → 초기 간선 특징 · 어텐션 신호', GREEN);
+        box(ctx, pad, y4, bw, bh, '최종 OD 통행량 추정', '로그 공간 출력 F̂', GREEN);
+
+        arrow(ctx, w / 2, y0 + bh + 4, w / 2, y1 - 4, FAINT);
+        arrow(ctx, w / 2, y1 + bh + 4, pad + branchW / 2, branchY - 4, BLUE);
+        arrow(ctx, w / 2, y1 + bh + 4, pad + branchW + branchGap + branchW / 2, branchY - 4, AMBER);
+        arrow(ctx, pad + branchW / 2, branchY + 96, w / 2 - 18, y3 - 4, BLUE);
+        arrow(ctx, pad + branchW + branchGap + branchW / 2, branchY + 96, w / 2 + 18, y3 - 4, AMBER);
+        arrow(ctx, w / 2, y3 + bh + 4, w / 2, y4 - 4, GREEN);
+      }
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { draw(); onResize(draw); });
+  })();
+
+  /* ── 4. 복원 공간 패턴 비교 ─────────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('flow-comparison-canvas');
+    if (!cvs) return;
+    const nodes = [
+      [.50,.50], [.23,.20], [.50,.14], [.78,.22], [.86,.49], [.72,.78],
+      [.47,.86], [.18,.73], [.12,.44], [.33,.38], [.63,.36], [.39,.68]
+    ];
+    const truth = [
+      [1,0,3.4],[2,0,3.0],[3,0,2.8],[4,0,3.2],[5,0,2.6],[6,0,2.5],[7,0,2.7],[8,0,2.8],
+      [1,2,1.8],[3,4,1.5],[5,6,1.8],[7,8,1.7],[9,10,2.0],[10,4,1.5],[11,7,1.6],[2,9,1.4]
+    ];
+    const gravity = [
+      [1,0,3.6],[2,0,3.3],[3,0,3.1],[4,0,3.4],[5,0,2.9],[6,0,2.8],[7,0,2.9],[8,0,3.0],
+      [9,0,2.2],[10,0,2.2],[11,0,2.0],[1,2,.55],[5,6,.5]
+    ];
+    const neuro = [
+      [1,0,3.4],[2,0,3.0],[3,0,2.9],[4,0,3.1],[5,0,2.7],[6,0,2.5],[7,0,2.6],[8,0,2.7],
+      [1,2,1.5],[3,4,1.3],[5,6,1.6],[7,8,1.5],[9,10,1.8],[10,4,1.3],[11,7,1.4],[2,9,1.1]
+    ];
+    const panels = [
+      { title:'관측 흐름', sub:'중심축 + 주변부 연결', edges:truth, color:INK },
+      { title:'고전 중력모형', sub:'중심으로 과도하게 수렴', edges:gravity, color:AMBER },
+      { title:'neuroGravity', sub:'주변부 연결까지 보정', edges:neuro, color:BLUE }
+    ];
+
+    function panel(ctx, x, y, pw, ph, p) {
+      const mapTop = y + 40, mapH = ph - 62;
+      ctx.fillStyle = 'rgba(15,22,36,.022)';
+      ctx.fillRect(x, mapTop, pw, mapH);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = INK; ctx.font = '600 13px ' + FF;
+      ctx.fillText(p.title, x + pw / 2, y + 12);
+      ctx.fillStyle = MUTED; ctx.font = '11px ' + FF;
+      ctx.fillText(p.sub, x + pw / 2, y + 30);
+
+      const pos = nodes.map(([nx, ny]) => [x + 12 + nx * (pw - 24), mapTop + 10 + ny * (mapH - 20)]);
+      for (const [a, b, weight] of p.edges) {
+        ctx.beginPath(); ctx.moveTo(...pos[a]); ctx.lineTo(...pos[b]);
+        ctx.strokeStyle = p.color; ctx.globalAlpha = .16 + weight * .12;
+        ctx.lineWidth = weight; ctx.lineCap = 'round'; ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      pos.forEach(([px, py], i) => {
+        ctx.beginPath(); ctx.arc(px, py, i === 0 ? 5.4 : 3.6, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? p.color : BG; ctx.fill();
+        ctx.strokeStyle = p.color; ctx.lineWidth = 1.4; ctx.stroke();
+      });
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 350, 520);
+      const mobile = w < 560, gap = mobile ? 16 : 18;
+      if (!mobile) {
+        const pw = (w - gap * 2) / 3;
+        panels.forEach((p, i) => panel(ctx, i * (pw + gap), 16, pw, h - 28, p));
+      } else {
+        const ph = (h - gap * 2 - 8) / 3;
+        panels.forEach((p, i) => panel(ctx, 0, 4 + i * (ph + gap), w, ph, p));
+      }
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { draw(); onResize(draw); });
+  })();
+
+  /* ── 5. 공간 소득 분리의 개념 ───────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('si-concept-canvas');
+    if (!cvs) return;
+    const low = Array.from({length:36}, (_, i) => (i + Math.floor(i / 6)) % 2);
+    const high = Array.from({length:36}, (_, i) => (i % 6 < 3 ? 0 : 1));
+
+    function city(ctx, x, y, pw, ph, title, sub, cells, highSI) {
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = INK; ctx.font = '600 13px ' + FF;
+      ctx.fillText(title, x + pw / 2, y + 12);
+      ctx.fillStyle = MUTED; ctx.font = '11px ' + FF;
+      ctx.fillText(sub, x + pw / 2, y + 31);
+      const grid = Math.min(pw - 30, ph - 104);
+      const gx = x + (pw - grid) / 2, gy = y + 46, cs = grid / 6;
+      cells.forEach((v, i) => {
+        const cx = gx + (i % 6) * cs, cy = gy + Math.floor(i / 6) * cs;
+        ctx.fillStyle = v === 0 ? 'rgba(0,159,222,.70)' : 'rgba(255,138,42,.72)';
+        ctx.fillRect(cx + .8, cy + .8, cs - 1.6, cs - 1.6);
+      });
+      ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+      ctx.strokeRect(gx + .5, gy + .5, grid - 1, grid - 1);
+      if (highSI) {
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(gx + grid / 2, gy - 5); ctx.lineTo(gx + grid / 2, gy + grid + 5);
+        ctx.strokeStyle = INK; ctx.lineWidth = 1.3; ctx.stroke(); ctx.setLineDash([]);
+      }
+      const by = gy + grid + 18, barW = grid * .72, bx = x + (pw - barW) / 2;
+      ctx.fillStyle = SOFT; ctx.fillRect(bx, by, barW, 7);
+      ctx.fillStyle = highSI ? AMBER : BLUE; ctx.fillRect(bx, by, barW * (highSI ? .84 : .18), 7);
+      ctx.fillStyle = MUTED; ctx.font = '11px ' + FF;
+      ctx.fillText('덩어리 사이 분산  ' + (highSI ? '큼' : '작음'), x + pw / 2, by + 22);
+      ctx.fillStyle = highSI ? WARN : BLUE; ctx.font = '600 12px ' + FF;
+      ctx.fillText(highSI ? 'SI 높음' : 'SI 낮음', x + pw / 2, by + 40);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 300, 430);
+      const mobile = w < 560;
+      if (!mobile) {
+        const gap = 34, pw = (w - gap) / 2;
+        city(ctx, 0, 6, pw, h - 12, '소득이 공간적으로 섞인 도시', '두 집단의 전체 비율은 50 : 50', low, false);
+        city(ctx, pw + gap, 6, pw, h - 12, '소득이 공간적으로 갈린 도시', '두 집단의 전체 비율은 50 : 50', high, true);
+      } else {
+        const gap = 18, ph = (h - gap) / 2;
+        city(ctx, 0, 2, w, ph - 2, '소득이 공간적으로 섞인 도시', '같은 전체 분포 · SI 낮음', low, false);
+        city(ctx, 0, ph + gap, w, ph - 2, '소득이 공간적으로 갈린 도시', '같은 전체 분포 · SI 높음', high, true);
+      }
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { draw(); onResize(draw); });
+  })();
+
+  /* ── 6. 무관측 전이 성능 막대 ───────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('transfer-bar');
+    if (!cvs) return;
+    const bars = [
+      { n: '로스앤젤레스', v: 0.69, ref: 0.70 },
+      { n: 'SF 베이',     v: 0.61, ref: 0.60 },
+      { n: '보고타',      v: 0.48, ref: null },
+      { n: '리우데자네이루', v: 0.42, ref: null }
+    ];
+
+    function draw() {
+      const { ctx, w, h } = setup(cvs, 320, 260);
+      const P = { l: 44, r: w - 12, t: 32, b: h - 42 };
+      const YMAX = 0.8;
+      const sy = v => P.b - v / YMAX * (P.b - P.t);
+
+      ctx.font = '11.5px ' + FF;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (let v = 0.2; v <= 0.81; v += 0.2) {
+        const y = sy(v);
+        ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(P.r, y);
+        ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(v.toFixed(1), P.l - 8, y);
+      }
+      ctx.beginPath(); ctx.moveTo(P.l, P.b); ctx.lineTo(P.r, P.b);
+      ctx.strokeStyle = LINE; ctx.stroke();
+
+      const slot = (P.r - P.l) / bars.length;
+      const bw = Math.min(76, slot * 0.5);
+      bars.forEach((b, i) => {
+        const cx = P.l + slot * (i + 0.5);
+        const x = cx - bw / 2, y = sy(b.v);
+        ctx.fillStyle = 'rgba(0,159,222,.78)';
+        ctx.fillRect(x, y, bw, P.b - y);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = BG; ctx.font = '600 14px ' + FF;
+        ctx.fillText(b.v.toFixed(2), cx, y + 24);
+        ctx.fillStyle = MUTED; ctx.font = '12px ' + FF;
+        ctx.fillText(b.n, cx, P.b + 17);
+        if (b.ref !== null) {
+          const ry = sy(b.ref);
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(x - 8, ry); ctx.lineTo(x + bw + 8, ry);
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+
+      // 범례
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.font = '12px ' + FF;
+      let lx = P.l, ly = 13;
+      ctx.fillStyle = 'rgba(0,159,222,.78)';
+      ctx.fillRect(lx, ly - 5, 12, 10);
+      ctx.fillStyle = MUTED;
+      ctx.fillText('보스턴 모형 무관측 전이', lx + 18, ly);
+      lx += 18 + ctx.measureText('보스턴 모형 무관측 전이').width + 22;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 16, ly);
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = MUTED;
+      ctx.fillText('현지 10% 관측 학습', lx + 22, ly);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { draw(); onResize(draw); });
+  })();
+
+  /* ── 5. 전이 R² 대 SI 차이 ──────────────────────────────────── */
+  (function () {
+    const cvs = document.getElementById('si-canvas');
+    if (!cvs) return;
+    const SRC = [
+      { n: '보스턴',       c: BLUE,  p: [[0.018, 0.694], [0.035, 0.608], [0.260, 0.480], [0.348, 0.417]] },
+      { n: '로스앤젤레스',  c: AMBER, p: [[0.018, 0.577], [0.017, 0.623], [0.242, 0.388], [0.330, 0.359]] },
+      { n: 'SF 베이',      c: GREEN, p: [[0.035, 0.655], [0.017, 0.605], [0.225, 0.347], [0.313, 0.296]] },
+      { n: '보고타',       c: WARN,  p: [[0.088, 0.380], [0.225, 0.215], [0.242, 0.216], [0.260, 0.201]] },
+      { n: '리우',         c: INK,   p: [[0.088, 0.398], [0.313, 0.215], [0.330, 0.193], [0.348, 0.179]] }
+    ];
+    const X0 = 0, X1 = 0.38, Y0 = 0.12, Y1 = 0.76;
+
+    function fit(pts) {
+      const n = pts.length;
+      let sx = 0, sy = 0, sxx = 0, sxy = 0;
+      for (const [x, y] of pts) { sx += x; sy += y; sxx += x * x; sxy += x * y; }
+      const d = n * sxx - sx * sx;
+      if (Math.abs(d) < 1e-12) return { m: 0, b: sy / n };
+      const m = (n * sxy - sx * sy) / d;
+      return { m, b: (sy - m * sx) / n };
+    }
+
+    function frame(ctx, w, h, prog) {
+      ctx.font = '12.5px ' + FF; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      let rows = 1, lx = 0;
+      for (const s of SRC) {
+        const bw = 10 + 6 + ctx.measureText(s.n).width + 18;
+        if (lx + bw > w && lx > 0) { rows++; lx = 0; }
+        lx += bw;
+      }
+      const legendH = rows * 19 + 6;
+      const P = { l: 46, r: w - 12, t: legendH + 10, b: h - 34 };
+      const sx = v => P.l + (v - X0) / (X1 - X0) * (P.r - P.l);
+      const sy = v => P.b - (v - Y0) / (Y1 - Y0) * (P.b - P.t);
+
+      lx = 0; let ly = 12;
+      for (const s of SRC) {
+        const tw = ctx.measureText(s.n).width, bw = 10 + 6 + tw + 18;
+        if (lx + bw > w && lx > 0) { lx = 0; ly += 19; }
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 10, ly);
+        ctx.strokeStyle = s.c; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(s.n, lx + 16, ly);
+        lx += bw;
+      }
+
+      ctx.font = '11.5px ' + FF; ctx.textAlign = 'right';
+      for (let v = 0.2; v <= 0.71; v += 0.1) {
+        const y = sy(v);
+        ctx.beginPath(); ctx.moveTo(P.l, y); ctx.lineTo(P.r, y);
+        ctx.strokeStyle = LINE; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(v.toFixed(1), P.l - 8, y);
+      }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      for (let v = 0; v <= 0.351; v += 0.1) {
+        const x = sx(v);
+        ctx.beginPath(); ctx.moveTo(x, P.b); ctx.lineTo(x, P.b + 4);
+        ctx.strokeStyle = LINE; ctx.stroke();
+        ctx.fillStyle = MUTED; ctx.fillText(v.toFixed(1), x, P.b + 8);
+      }
+      ctx.fillStyle = MUTED; ctx.font = '12px ' + FF;
+      ctx.fillText('출발 도시와 대상 도시의 SI 차이', (P.l + P.r) / 2, h - 15);
+      ctx.save();
+      ctx.translate(13, (P.t + P.b) / 2); ctx.rotate(-Math.PI / 2);
+      ctx.textBaseline = 'middle';
+      ctx.fillText('전이 R²', 0, 0);
+      ctx.restore();
+
+      for (const s of SRC) {
+        const f = fit(s.p);
+        const xs = s.p.map(q => q[0]);
+        const xa = Math.min(...xs), xb = Math.max(...xs);
+        const xe = xa + (xb - xa) * prog;
+        ctx.beginPath();
+        ctx.moveTo(sx(xa), sy(f.m * xa + f.b));
+        ctx.lineTo(sx(xe), sy(f.m * xe + f.b));
+        ctx.strokeStyle = s.c; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+        ctx.globalAlpha = .85; ctx.stroke(); ctx.globalAlpha = 1;
+        for (const [x, y] of s.p) {
+          if (x > xe + 1e-9) continue;
+          ctx.beginPath(); ctx.arc(sx(x), sy(y), 4, 0, Math.PI * 2);
+          ctx.fillStyle = s.c; ctx.fill();
+          ctx.strokeStyle = BG; ctx.lineWidth = 1.4; ctx.stroke();
+        }
+      }
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    }
+
+    function draw(prog) {
+      const { ctx, w, h } = setup(cvs, 320, 260);
+      frame(ctx, w, h, prog);
+    }
+    function run() {
+      let t0 = null;
+      function step(ts) {
+        if (t0 === null) t0 = ts;
+        const raw = Math.min(1, (ts - t0) / 900);
+        draw(1 - Math.pow(1 - raw, 3));
+        if (raw < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    lazy(cvs.closest('.figure-canvas'), () => { run(); onResize(() => draw(1)); });
+  })();
+});
+</script>
+
+</body>
+</html>
