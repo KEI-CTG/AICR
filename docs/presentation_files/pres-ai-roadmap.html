@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="기후위기 시대 KEI의 AI 전략과 2027–2030년 로드맵: AI 연구과제 현황, 데이터·지식 기반과 예측·분류 모델, 근거 기반 환경정책 지원 서비스의 단계별 이행계획.">
+<title>기후·환경위기 시대 KEI의 AI 전략과 로드맵 · KEI AI 융복합 연구단</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#f6f0e3">
+<link rel="apple-touch-icon" href="../assets/KEI_Wordmark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css">
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#f6f0e3;
+    --ink:#0f1624;
+    --muted:rgba(15,22,36,.62);
+    --muted-strong:rgba(15,22,36,.82);
+    --faint:rgba(15,22,36,.38);
+    --line:rgba(15,22,36,.12);
+    --blue:#009fde;
+    --green:#00ab84;
+    --amber:#ff8a2a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+    min-height:100vh;
+  }
+  ::selection{ background:rgba(0,159,222,.20); color:var(--ink); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 64px; border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{ display:flex;align-items:center;gap:10px;text-decoration:none; }
+  .topbar .logo .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+  }
+  .topbar .logo svg{ height:51px; width:auto; display:block }
+  .topbar .logo svg .cls-1{ fill:var(--ink) }
+  .topbar .logo svg .cls-2{ fill:#009fde }
+  .topbar .logo svg .cls-3{ fill:#00ab84 }
+  .topbar .back{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+
+  /* ---- Hero band ---- */
+  .hero-band{
+    position:relative; isolation:isolate; overflow:hidden;
+    min-height:180px; padding:24px 64px; background:#05070d;
+    display:flex; align-items:center;     /* vertically center topbar */
+  }
+  .hero-band > .topbar{ width:100%; }
+  .hero-band__bg{
+    position:absolute; inset:0; z-index:1;
+    background:url("../assets/hero-bg.jpg") center/cover no-repeat;
+    filter:saturate(1.08) contrast(1.06);
+  }
+  .hero-band__scrim{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:
+      linear-gradient(180deg,
+        rgba(7,10,20,.55) 0%,
+        rgba(7,10,20,.22) 30%,
+        transparent 55%,
+        transparent 85%,
+        rgba(7,10,20,.18) 100%);
+  }
+  .hero-band > .topbar{ position:relative; z-index:10; }
+  .hero-band .topbar{ padding:0; border:0; }
+  .hero-band .topbar .logo svg .cls-1{ fill:#e8e6de; }
+  .hero-band .topbar .logo .dot{
+    background:#00e5c5;
+    box-shadow:0 0 18px #00e5c5,0 0 6px #009fde,0 0 3px rgba(255,255,255,.8) inset;
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  .hero-band .topbar .back:hover{
+    color:#ffffff; border-bottom-color:rgba(255,255,255,.45);
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:.55; transform:scale(1) }
+    50%    { opacity:.95; transform:scale(1.08) }
+  }
+
+  /* ---- Article container ---- */
+  .article{
+    max-width:880px;
+    margin:0 auto;
+    padding:56px 32px 96px;
+  }
+
+  .article-header{
+    margin-bottom:40px;
+    padding-bottom:32px;
+    border-bottom:1px solid var(--line);
+  }
+  .page-label{
+    display:flex; align-items:center; gap:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); margin-bottom:24px;
+  }
+  .page-label .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .article-header h1{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px, 3.6vw, 40px);
+    line-height:1.22; letter-spacing:-0.02em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-subtitle{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400; line-height:1.45;
+    color:var(--muted-strong);
+    margin-bottom:24px;
+    letter-spacing:-0.005em;
+  }
+  .byline{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:16px; font-weight:500;
+    color:var(--muted-strong);
+    margin-bottom:6px;
+  }
+  .article-meta{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:14px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .article-meta .date{ color:var(--blue); }
+  .article-meta em{
+    font-style:normal; color:var(--muted-strong); margin-left:4px;
+  }
+
+  /* ---- Video embed ---- */
+  .video-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio: 16 / 9;
+    background:#000;
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:40px;
+    box-shadow:
+      0 2px 6px rgba(15,22,36,.08),
+      0 18px 40px rgba(15,22,36,.12);
+  }
+  .video-wrap video{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    border:0; display:block;
+    object-fit:contain;
+    background:#000;
+  }
+
+  /* ---- Abstract ---- */
+  .abstract{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:18px; font-weight:400; line-height:1.8;
+    color:var(--muted-strong);
+    border-left:3px solid var(--blue);
+    padding:6px 0 6px 22px;
+    margin-bottom:48px;
+  }
+
+  /* ---- Body ---- */
+  .article-body{
+    font-size:17px; line-height:1.85;
+    color:var(--muted-strong);
+  }
+  .article-body section{ margin-bottom:40px; }
+  .article-body section:last-child{ margin-bottom:0; }
+  .article-body h2{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:700;
+    font-size:clamp(22px, 2.2vw, 28px);
+    line-height:1.25; letter-spacing:-0.01em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-body p{ margin-bottom:14px; }
+  .article-body p:last-child{ margin-bottom:0; }
+  .article-body ul{
+    list-style:none;
+    padding:0; margin:0;
+  }
+  .article-body ul li{
+    position:relative;
+    padding-left:22px;
+    margin-bottom:10px;
+    line-height:1.75;
+  }
+  .article-body ul li::before{
+    content:'';
+    position:absolute;
+    left:4px; top:0.72em;
+    width:8px; height:8px;
+    background:var(--blue);
+    border-radius:50%;
+  }
+  .article-body ul li em{
+    font-style:normal;
+    font-weight:700;
+    color:var(--ink);
+  }
+
+  /* ---- End-of-article nav ---- */
+  .article-end-nav{
+    margin-top:56px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-end-nav a{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .article-end-nav a:hover{
+    color:var(--ink); border-bottom-color:rgba(0,159,222,.45);
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:36px 64px 44px;
+  }
+  .site-footer__inner{
+    max-width:1660px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:48px; flex-wrap:wrap;
+  }
+  .site-footer a{
+    color:var(--ink); text-decoration:none;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:color .2s;
+  }
+  .site-footer a:hover{ color:var(--blue) }
+  .site-footer .address{
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    line-height:1.4; color:var(--ink);
+    text-align:right;
+  }
+  .mail-icon{ width:18px; height:18px; flex:none; opacity:.9 }
+
+  @media (max-width:768px){
+    .topbar{ padding:16px 24px }
+    .hero-band{ padding:16px 24px; min-height:140px; }
+    .article{ padding:40px 22px 72px; }
+    .article-body{ font-size:16px; }
+    .site-footer{ padding:32px 24px }
+    .site-footer__inner{ flex-direction:column; gap:20px }
+    .site-footer .address{ text-align:left }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-band">
+  <div class="hero-band__bg" aria-hidden="true"></div>
+  <div class="hero-band__scrim" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <a href="../index.ko.html" class="logo" aria-label="KEI AI 융복합 연구단 홈">
+      <span class="dot" aria-hidden="true"></span>
+      <svg viewBox="83 188 163 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KEI">
+        <g>
+          <path class="cls-1" d="M141.15,254.81h0c0,3.8,2.1,6.7,7.32,6.7h28.95v-9.82h-23.11c-.76,0-1.14-.37-1.14-.99v-8.18h21.85v-9.82h-21.85v-7.92h24.24v-9.82h-36.27v39.85Z"/>
+          <path class="cls-1" d="M117.34,237.61l19.15-22.65h-14.61l-13.9,16.44v-16.44h-12.03v42.34h0c0,2.39,1.32,4.21,4.6,4.21h7.42v-15.74c7.67,2.45,13.83,8.28,16.74,15.74h12.08c-2.87-10.42-10.03-19.05-19.46-23.9Z"/>
+          <path class="cls-1" d="M186.34,214.96v42.34c0,2.39,1.32,4.21,4.6,4.21h7.42v-46.55h-12.03Z"/>
+        </g>
+        <g>
+          <path class="cls-3" d="M233.28,210.31c0,5.14-4.17,9.31-9.31,9.31-1.29,0-2.53-.27-3.65-.74v9.69c1.18.23,2.4.36,3.65.36,10.28,0,18.62-8.34,18.62-18.62,0-1.61-.23-3.16-.61-4.66h-9.96c.79,1.37,1.26,2.96,1.26,4.66Z"/>
+          <path class="cls-2" d="M214.66,210.31c0-5.14,4.17-9.31,9.31-9.31,1.29,0,2.53.27,3.65.74v-9.69c-1.18-.23-2.4-.36-3.65-.36-10.28,0-18.62,8.34-18.62,18.62,0,1.61.23,3.16.61,4.66h9.96c-.79-1.37-1.26-2.96-1.26-4.66Z"/>
+        </g>
+      </svg>
+    </a>
+    <a href="../presentations.html" class="back" id="back-link" aria-label="발표 목록으로">
+      <span aria-hidden="true">←</span><span>Back</span>
+    </a>
+  </div>
+</header>
+
+<article class="article">
+  <header class="article-header">
+    <div class="page-label">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Presentation</span>
+    </div>
+    <h1>기후·환경위기 시대 KEI의 AI 전략과 로드맵</h1>
+    <p class="byline">김경호 · 연구 로드맵(2027-2030)</p>
+    <p class="article-meta">
+      <span class="date">2026.08</span> · 약 13분
+    </p>
+  </header>
+
+  <div class="video-wrap">
+    <video
+      controls preload="metadata" playsinline
+      poster="../assets/pres-ai-roadmap-poster.jpg"
+      title="기후·환경위기 시대 KEI의 AI 전략과 로드맵">
+      <source src="../assets/pres-ai-roadmap.mp4" type="video/mp4">
+      이 브라우저는 동영상 재생을 지원하지 않습니다.
+      <a href="../assets/pres-ai-roadmap.mp4">영상 내려받기</a>
+    </video>
+  </div>
+
+  <p class="abstract">
+    기후위기와 환경정책의 복잡성이 증가하는 가운데, KEI가 AI 연구 기반을 확대하고 데이터·모델·지식을 연계하여 2030년까지 근거 기반 환경정책 지원 역량을 구축하기 위한 전략과 로드맵을 제시한다. 2024~2026년 AI 연구과제 현황을 점검하고, 데이터·지식 기반, 예측·분류 모델, 정책 지원 서비스 세 추진영역의 2030년 목표와 2027–2030년 연차별 이행계획을 다룬다.
+  </p>
+
+  <div class="article-body">
+
+    <section>
+      <h2>주요 내용</h2>
+      <ul>
+        <li><em>배경: 환경변화와 AI 활용 확대</em> — 환경변화의 영향이 지역·시기에 따라 다르게 나타나고 장기 전망의 불확실성이 큰 상황에서, AI가 국가측정망 자료·위성영상·공간정보·모델 산출자료를 연계해 기후위험과 취약성을 평가하는 연구수단으로 확대되는 흐름을 정리한다. 국정과제 20「AI 3대 강국 도약을 위한 AI 고속도로 구축」과 국정과제 43「국가 기후적응 역량 강화」에 따른 정책 수요도 함께 짚는다.</li>
+        <li><em>현황: AI 연구과제와 성과</em> — 2024~2026년 KEI의 AI 핵심 및 관련·인접 과제 29건을 환경정책 지식 인프라, 대기·기후, 공간·원격탐사(GeoAI), 생태·자연, 해양, 환경영향평가·환경보건 6개 분야로 나누어 살펴본다. 1시간 후 PM2.5 농도 예측 모델(RMSE 2.52㎍/㎥, 상관계수 0.983), U-Net 계열 토지피복 자동분류(정확도 91.4%), 성분자료분석(CoDA)과 기계학습을 결합한 토양 중금속 분석 파이프라인 등 예측·분류 모델 연구와, 온톨로지 기반 환경정책 정보 지원 프레임워크 연구를 소개한다.</li>
+        <li><em>전략: 2030년 목표와 추진영역</em> — 데이터·지식 기반, 예측·분류 모델, 정책 지원 서비스 세 추진영역별 2030년 목표와 핵심 전략을 제시한다. 신뢰성(출처 관리와 모델의 성능·불확실성·적용 한계 제시), 책임성(AI의 역할과 연구자의 최종 판단 책임 구분), 효율성(데이터·모델·분석 절차의 재사용 확대)을 공통 원칙으로 설정한다.</li>
+        <li><em>로드맵: 2027–2030년 이행계획</em> — 2027년 기반 정비·시범 적용, 2028–2029년 적용 확대·재사용, 2030년 정책 지원 서비스 운영으로 이어지는 추진영역별 연차 계획을 정리한다. 아울러 AI의 전 생애주기 환경영향(직접·간접·고차 영향)을 측정·평가하는 신규 연구과제 방향과 이행체계를 다룬다.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>대상</h2>
+      <p>환경정책 연구자, 환경 데이터·AI 분야 실무자, 그리고 공공부문 AI 도입과 중장기 연구 기획에 관심이 있는 관계자를 주요 청중으로 상정한다.</p>
+    </section>
+
+  </div>
+
+  <nav class="article-end-nav">
+    <a href="../presentations.html">
+      <span aria-hidden="true">←</span><span>All</span>
+    </a>
+  </nav>
+</article>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href="mailto:khkim@kei.re.kr">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+      </svg>
+      khkim@kei.re.kr
+    </a>
+    <div class="address">
+      Bldg. B, Sejong National Research Complex<br>
+      370 Sicheong-daero, Sejong 30147, Republic of Korea
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Random hero bg — picks one of the still-image variants on each load
+  (() => {
+    const variants = [
+      '../assets/hero-bg.jpg',
+      '../assets/hero_blue_v3_poster.png'
+    ];
+    const pick = variants[Math.floor(Math.random() * variants.length)];
+    const bg = document.querySelector('.hero-band__bg');
+    if (bg) bg.style.backgroundImage = `url("${pick}")`;
+  })();
+
+  // Back link
+  (() => {
+    const back = document.getElementById('back-link');
+    if (!back) return;
+    back.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+        history.back();
+      } else {
+        location.href = '../presentations.html';
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
