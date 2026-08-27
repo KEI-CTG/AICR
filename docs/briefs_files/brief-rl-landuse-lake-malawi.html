@@ -1,0 +1,1475 @@
+<!doctype html>
+<!-- ============================================================================
+  KEI AI 융복합 연구단 브리프 — 보상함수에 적힌 것만 계획에 남는다
+  원 논문: Yao, Y. (2026). RL-Driven Sustainable Land-Use Allocation for the
+           Lake Malawi Basin. arXiv:2604.03768v3.
+============================================================================= -->
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Yao(2026)의 말라위호 유역 강화학습 토지이용 배분 연구를 소개한다. 생태계서비스 가치와 공간 배치를 결합한 보상 설계가 계획안을 어떻게 규정하는지 검토한다.">
+<title>말라위호 유역 강화학습 토지이용 배분 연구 해설 · KEI AI 융복합 연구단</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#f6f0e3">
+<link rel="canonical" href="https://kei-ctg.github.io/AICR/briefs_files/brief-rl-landuse-lake-malawi.html">
+<!-- SNS 미리보기 카드. og:image는 스크레이퍼가 절대 URL만 읽으므로 절대 주소로 둔다. -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://kei-ctg.github.io/AICR/briefs_files/brief-rl-landuse-lake-malawi.html">
+<meta property="og:title" content="말라위호 유역 강화학습 토지이용 배분 연구 해설">
+<meta property="og:description" content="Yao(2026)의 말라위호 유역 강화학습 토지이용 배분 연구를 소개한다. 생태계서비스 가치와 공간 배치를 결합한 보상 설계가 계획안을 어떻게 규정하는지 검토한다.">
+<meta property="og:image" content="https://kei-ctg.github.io/AICR/assets/briefs/rl-landuse-lake-malawi/allocation-headline.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../assets/KEI_Wordmark.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/KEI_Wordmark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css">
+<link rel="stylesheet" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#f6f0e3;
+    --ink:#0f1624;
+    --muted:rgba(15,22,36,.62);
+    --muted-strong:rgba(15,22,36,.82);
+    --muted-mid:rgba(15,22,36,.68);
+    --faint:rgba(15,22,36,.38);
+    --line:rgba(15,22,36,.12);
+    --line-soft:rgba(15,22,36,.06);
+    --blue:#009fde;
+    --green:#00ab84;
+    --amber:#ff8a2a;
+    --warn:#c46411;             /* deeper amber for warning callouts */
+    --serif:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;  /* sans-serif gothic — used for tabular/equation content for visual consistency */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+    min-height:100vh;
+  }
+  ::selection{ background:rgba(0,159,222,.20); color:var(--ink); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 64px; border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{ display:flex;align-items:center;gap:10px;text-decoration:none; }
+  .topbar .logo .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+  }
+  .topbar .logo svg{ height:51px; width:auto; display:block }
+  .topbar .logo svg .cls-1{ fill:var(--ink) }
+  .topbar .logo svg .cls-2{ fill:#009fde }
+  .topbar .logo svg .cls-3{ fill:#00ab84 }
+  .topbar .back{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+
+  /* ---- Hero band ---- */
+  .hero-band{
+    position:relative; isolation:isolate; overflow:hidden;
+    min-height:180px; padding:24px 64px; background:#05070d;
+    display:flex; align-items:center;     /* vertically center topbar */
+  }
+  .hero-band > .topbar{ width:100%; }
+  .hero-band__bg{
+    position:absolute; inset:0; z-index:1;
+    background:url("../assets/hero-bg.jpg") center/cover no-repeat;
+    filter:saturate(1.08) contrast(1.06);
+  }
+  .hero-band__scrim{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:
+      linear-gradient(180deg,
+        rgba(7,10,20,.55) 0%,
+        rgba(7,10,20,.22) 30%,
+        transparent 55%,
+        transparent 85%,
+        rgba(7,10,20,.18) 100%);
+  }
+  .hero-band > .topbar{ position:relative; z-index:10; }
+  .hero-band .topbar{ padding:0; border:0; }
+  .hero-band .topbar .logo svg .cls-1{ fill:#e8e6de; }
+  .hero-band .topbar .logo .dot{
+    background:#00e5c5;
+    box-shadow:0 0 18px #00e5c5,0 0 6px #009fde,0 0 3px rgba(255,255,255,.8) inset;
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  .hero-band .topbar .back:hover{
+    color:#ffffff; border-bottom-color:rgba(255,255,255,.45);
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:.55; transform:scale(1) }
+    50%    { opacity:.95; transform:scale(1.08) }
+  }
+
+  /* ---- Article container ---- */
+  .article{
+    max-width:760px;
+    margin:0 auto;
+    padding:56px 32px 96px;
+  }
+
+  /* Article header */
+  .article-header{
+    margin-bottom:48px;
+    padding-bottom:36px;
+    border-bottom:1px solid var(--line);
+  }
+  .page-label{
+    display:flex; align-items:center; gap:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); margin-bottom:24px;
+  }
+  .page-label .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .article-header h1{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px, 3.6vw, 40px);
+    line-height:1.22; letter-spacing:-0.02em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-subtitle{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400; line-height:1.45;
+    color:var(--muted-strong);
+    margin-bottom:24px;
+    letter-spacing:-0.005em;
+  }
+  .article-header .byline{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:16px; font-weight:500;
+    color:var(--muted-strong);
+    margin-bottom:6px;
+  }
+  .article-header .article-meta{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:14px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .article-header .article-meta .date{ color:var(--blue); }
+  .article-header .article-meta em{
+    font-style:normal; color:var(--muted-strong); margin-left:4px;
+  }
+
+  /* Lede / abstract */
+  .article-abstract{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:18px; font-weight:400; line-height:1.8;
+    color:var(--muted-strong);
+    border-left:3px solid var(--blue);
+    padding:6px 0 6px 22px;
+    margin-bottom:56px;
+  }
+
+  /* Body copy */
+  .article-body{
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    font-size:17px;
+    line-height:1.85;
+    color:var(--muted-strong);
+  }
+  .article-body section{ margin-bottom:64px; }
+  .article-body section:last-child{ margin-bottom:0; }
+
+  .article-body h2{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:700;
+    font-size:clamp(22px, 2.2vw, 28px);
+    line-height:1.3; letter-spacing:-0.015em;
+    color:var(--ink);
+    margin:0 0 24px;
+  }
+  .article-body h3{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-weight:600;
+    font-size:19px; line-height:1.4;
+    margin:32px 0 12px;
+    color:var(--ink);
+    letter-spacing:-0.005em;
+  }
+  .article-body p{ color:var(--muted-strong); margin-bottom:1.4em; }
+  .article-body p:last-child{ margin-bottom:0; }
+  .article-body strong{ color:var(--ink); font-weight:700; }
+  /* 한글 강조 — 한글 폰트에는 이탤릭이 없어 가짜 오블리크가 되므로 세미볼드로 처리.
+     라틴 학명·서명 등 진짜 이탤릭이 필요하면 <i>를 쓴다. */
+  .article-body em{ color:var(--ink); font-style:normal; font-weight:600; }
+  .article-body i{ font-style:italic; }
+  .article-body a{
+    color:var(--blue);
+    text-decoration:none;
+    border-bottom:1px solid rgba(0,159,222,.35);
+    transition:border-color .2s, color .2s;
+    word-break:break-all;
+  }
+  .article-body a:hover{ color:var(--ink); border-bottom-color:var(--ink); }
+
+  .article-body ul, .article-body ol{
+    padding-left:24px;
+    color:var(--muted-strong);
+    margin-bottom:1.4em;
+  }
+  .article-body li{ margin-bottom:8px; line-height:1.75; }
+  .article-body li::marker{ color:var(--faint); }
+
+  .article-body code{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:0.92em;
+    background:rgba(15,22,36,.06);
+    padding:2px 6px; border-radius:3px;
+    color:var(--ink);
+  }
+  .article-body pre{
+    background:rgba(15,22,36,.045);
+    border-left:2px solid var(--line);
+    padding:18px 22px;
+    margin:28px 0; overflow-x:auto;
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:13.5px; line-height:1.7;
+    color:var(--ink);
+  }
+  .article-body pre code{ background:transparent; padding:0; font-size:inherit; }
+
+  .article-body blockquote{
+    margin:36px 0;
+    padding:6px 0 6px 24px;
+    border-left:2px solid var(--line);
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:19px;                 /* 한글 가짜 오블리크 방지 — 이탤릭 대신 크기·선으로 구분 */
+    line-height:1.55; letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+
+  /* ---- Callout (subtle left rule, no box) ---- */
+  .callout{
+    margin:36px 0;
+    padding:6px 0 6px 24px;
+    border-left:2px solid var(--blue);
+  }
+  .callout-warn{ border-left-color:var(--warn); }
+  .callout-title{
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400;
+    line-height:1.45;
+    letter-spacing:-0.005em;
+    color:var(--blue);
+    margin-bottom:8px;
+  }
+  .callout-warn .callout-title{ color:var(--warn); }
+  .callout p{
+    font-size:17px;                 /* match body copy */
+    color:var(--muted-strong);
+    line-height:1.85;               /* match body copy */
+    margin-bottom:0.7em;
+  }
+  .callout p:last-child{ margin-bottom:0; }
+
+  /* ---- Variable list (dl) ---- */
+  .var-list{ margin:24px 0 32px; }
+  .var-row{
+    display:grid;
+    grid-template-columns:48px 1fr;
+    align-items:baseline;
+    gap:18px;
+    margin-bottom:18px;
+  }
+  .var-row:last-child{ margin-bottom:0; }
+  .var-row dt{
+    font-family:var(--serif);
+    font-style:italic; font-weight:400;
+    font-size:20px;
+    color:var(--ink);
+  }
+  .var-row dd{
+    font-size:17px;
+    color:var(--muted-strong);
+    line-height:1.7;
+  }
+
+  /* ---- Equation block ---- */
+  .figure-equations{ margin:40px 0; overflow-x:auto; }  /* 긴 수식은 모바일에서 가로 스크롤 */
+  .equations-display{ max-width:460px; margin:0 auto; }
+  .eq-line{
+    display:flex; align-items:center; gap:16px;
+    margin-bottom:14px;
+    font-size:21px;
+    font-family:var(--serif);
+    font-variant-numeric:tabular-nums;
+    line-height:1.4;
+  }
+  .eq-line:last-of-type{ margin-bottom:0; }
+  .eq-lhs{
+    font-style:italic;
+    min-width:72px;
+    color:var(--ink);
+    opacity:.78;
+  }
+  .eq-op{ color:var(--muted); }
+  .eq-rhs{ color:var(--ink); font-weight:500; }
+
+  /* ---- Data table (custom row layout) ---- */
+  .data-table{
+    margin:32px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .data-row{
+    display:grid;
+    grid-template-columns:auto 1fr 2.4fr;
+    gap:20px;
+    padding:13px 0;
+    align-items:baseline;
+    font-size:17px;
+    line-height:1.6;
+    border-bottom:1px solid var(--line-soft);
+  }
+  .data-row:last-child{ border-bottom:none; }
+  .data-label{
+    font-family:var(--serif);
+    font-weight:600;
+    min-width:72px;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .data-value{
+    font-family:var(--serif);
+    font-weight:600;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .data-note{ color:var(--muted-strong); }
+
+  /* ---- Comparison cards (no actual grid — sequential) ---- */
+  .comparison-grid{ margin:36px 0; }
+  .comparison-card{ margin-bottom:32px; }
+  .comparison-card:last-child{ margin-bottom:0; }
+  .comparison-card h3{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-weight:700; font-size:19px;
+    color:var(--ink);
+    margin:0 0 8px;
+    letter-spacing:-0.005em;
+  }
+  .comparison-card p{
+    font-size:15.5px;
+    color:var(--muted-strong);
+    line-height:1.7;
+    margin-bottom:0;
+  }
+
+  /* ---- Figure with canvas ---- */
+  .figure-canvas{
+    margin:40px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .figure-canvas canvas{
+    display:block; width:100%; height:320px;
+    background:transparent;
+  }
+  .figure-canvas figcaption{
+    padding:14px 4px 14px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14px; line-height:1.6;
+    color:var(--muted);
+  }
+
+  /* ---- Figure with static image (논문 그림·지도·차트 이미지 — 가장 흔한 그림 형태) ---- */
+  .figure-image{
+    margin:40px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .figure-image img{
+    display:block; width:100%; height:auto;
+    margin:18px 0 0;
+  }
+  .figure-image figcaption{
+    padding:14px 4px 14px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14px; line-height:1.6;
+    color:var(--muted);
+  }
+
+  /* ---- Interactive explorer ---- */
+  .explorer-box{
+    margin:40px 0;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .explorer-box canvas{
+    display:block; width:100%; height:380px;
+    background:transparent;
+  }
+  .slider-group{ padding:20px 4px 16px; }
+  .slider-row{
+    display:grid;
+    grid-template-columns:110px 1fr 56px;
+    align-items:center; gap:14px;
+    margin-bottom:14px;
+  }
+  .slider-row:last-of-type{ margin-bottom:18px; }
+  .slider-row label{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:15px; font-weight:500;
+    color:var(--muted-strong);
+  }
+  .slider-val{
+    font-family:var(--serif);
+    font-size:15px; font-weight:600;
+    text-align:right; color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:3px;
+    outline:none; background:var(--line);
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px; height:16px; border-radius:50%; cursor:pointer;
+    background:var(--ink); border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--line);
+    transition:transform .15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover{ transform:scale(1.15); }
+  input[type="range"]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; cursor:pointer;
+    background:var(--ink); border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--line);
+  }
+  .reset-btn{
+    margin-top:4px;
+    padding:7px 16px;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:13px; font-weight:500; letter-spacing:.02em;
+    color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--line); border-radius:3px;
+    cursor:pointer;
+    transition:border-color .2s, color .2s;
+  }
+  .reset-btn:hover{ border-color:var(--ink); }
+
+  /* ---- (선택) 목차 — 다중 논문 등 긴 브리프에서만 사용 ---- */
+  .toc{
+    margin:-24px 0 56px;
+    padding:6px 0 6px 22px;
+    border-left:3px solid var(--line);
+  }
+  .toc ol{ list-style:none; padding:0; margin:0; }
+  .toc li{ margin-bottom:6px; font-size:15px; line-height:1.6; }
+  .toc a{ color:var(--muted-strong); text-decoration:none; transition:color .2s; }
+  .toc a:hover{ color:var(--blue); }
+
+  /* ---- References (APA hanging indent) ---- */
+  .article-refs{
+    margin-top:64px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-refs h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13px; font-weight:600;
+    letter-spacing:.10em; text-transform:uppercase;
+    color:var(--blue);
+    margin-bottom:18px;
+  }
+  .references{
+    list-style:none; padding:0;
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14.5px; line-height:1.72;
+    color:var(--muted-strong);
+  }
+  .references li{
+    padding-left:28px; text-indent:-28px;
+    margin-bottom:14px;
+  }
+  .references li:last-child{ margin-bottom:0; }
+  .references em{ color:var(--ink); font-style:italic; }
+  .references a{
+    color:var(--muted);
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+    transition:color .2s, border-color .2s;
+    word-break:break-all;
+  }
+  .references a:hover{ color:var(--blue); border-bottom-color:var(--blue); }
+
+  /* ---- Colophon ---- */
+  .colophon{
+    margin-top:48px;
+    padding-top:24px;
+    border-top:1px solid var(--line-soft);
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:14px; line-height:1.7;
+    color:var(--muted);
+  }
+
+  /* ---- End-of-article nav ---- */
+  .article-end-nav{
+    margin-top:48px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-end-nav a{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 0; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .article-end-nav a:hover{
+    color:var(--ink); border-bottom-color:rgba(0,159,222,.45);
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:36px 64px 44px;
+  }
+  .site-footer__inner{
+    max-width:1660px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:48px; flex-wrap:wrap;
+  }
+  .site-footer a{
+    color:var(--ink); text-decoration:none;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:color .2s;
+  }
+  .site-footer a:hover{ color:var(--blue) }
+  .site-footer .address{
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    line-height:1.4; color:var(--ink);
+    text-align:right;
+  }
+  .mail-icon{ width:18px; height:18px; flex:none; opacity:.9 }
+
+  /* ---- Reduced motion ---- */
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .page-label .dot, .topbar .logo .dot{ animation:none; }
+  }
+
+  /* ---- Print / PDF ---- */
+  @media print{
+    html,body{ background:#fff; }
+    .hero-band, .site-footer, .article-end-nav{ display:none; }
+    .article{ max-width:100%; padding:0 0 24px; }
+    .article-body a, .references a{ color:var(--ink); border-bottom:none; }
+    .figure-canvas, .explorer-box{ display:none; }  /* canvas는 인쇄 시 빈 상자로 나온다 */
+    .callout, .figure-image, .figure-equations, .data-table, .var-list, .comparison-card{ break-inside:avoid; }
+    .article-body h2, .article-body h3{ break-after:avoid; }
+  }
+
+  /* ---- Responsive ---- */
+  /* 약어 표: 라벨 폭을 고정해 9행이 세로로 정렬되게 한다 (용어집에만 적용) */
+  #glossary .data-row{ grid-template-columns:132px 1.25fr 2.1fr; }
+  #glossary .data-value{ font-weight:500; }
+
+  @media (max-width:768px){
+    .topbar{ padding:16px 24px }
+    .hero-band{ padding:16px 24px; min-height:140px; }
+    .article{ padding:40px 22px 72px; }
+    .article-body{ font-size:16px; }
+    .article-body section{ margin-bottom:48px; }
+    .data-row{ grid-template-columns:auto 1fr; gap:12px; }
+    #glossary .data-row{ grid-template-columns:auto 1fr; }
+    .data-note{ grid-column:1 / -1; color:var(--muted); }
+    .var-row{ grid-template-columns:36px 1fr; gap:14px; }
+    .slider-row{ grid-template-columns:1fr 1fr 48px; }
+    .figure-canvas canvas{ height:260px; }
+    .explorer-box canvas{ height:320px; }
+    .site-footer{ padding:32px 24px }
+    .site-footer__inner{ flex-direction:column; gap:20px }
+    .site-footer .address{ text-align:left }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-band">
+  <div class="hero-band__bg" aria-hidden="true"></div>
+  <div class="hero-band__scrim" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <a href="../index.ko.html" class="logo" aria-label="KEI AI 융복합 연구단 홈">
+      <span class="dot" aria-hidden="true"></span>
+      <svg viewBox="83 188 163 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KEI">
+        <g>
+          <path class="cls-1" d="M141.15,254.81h0c0,3.8,2.1,6.7,7.32,6.7h28.95v-9.82h-23.11c-.76,0-1.14-.37-1.14-.99v-8.18h21.85v-9.82h-21.85v-7.92h24.24v-9.82h-36.27v39.85Z"/>
+          <path class="cls-1" d="M117.34,237.61l19.15-22.65h-14.61l-13.9,16.44v-16.44h-12.03v42.34h0c0,2.39,1.32,4.21,4.6,4.21h7.42v-15.74c7.67,2.45,13.83,8.28,16.74,15.74h12.08c-2.87-10.42-10.03-19.05-19.46-23.9Z"/>
+          <path class="cls-1" d="M186.34,214.96v42.34c0,2.39,1.32,4.21,4.6,4.21h7.42v-46.55h-12.03Z"/>
+        </g>
+        <g>
+          <path class="cls-3" d="M233.28,210.31c0,5.14-4.17,9.31-9.31,9.31-1.29,0-2.53-.27-3.65-.74v9.69c1.18.23,2.4.36,3.65.36,10.28,0,18.62-8.34,18.62-18.62,0-1.61-.23-3.16-.61-4.66h-9.96c.79,1.37,1.26,2.96,1.26,4.66Z"/>
+          <path class="cls-2" d="M214.66,210.31c0-5.14,4.17-9.31,9.31-9.31,1.29,0,2.53.27,3.65.74v-9.69c-1.18-.23-2.4-.36-3.65-.36-10.28,0-18.62,8.34-18.62,18.62,0,1.61.23,3.16.61,4.66h9.96c-.79-1.37-1.26-2.96-1.26-4.66Z"/>
+        </g>
+      </svg>
+    </a>
+    <a href="../briefs.html" class="back" id="back-link" aria-label="브리프 목록으로">
+      <span aria-hidden="true">←</span><span>Back</span>
+    </a>
+  </div>
+</header>
+
+<article class="article">
+  <header class="article-header">
+    <div class="page-label">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Brief</span>
+    </div>
+    <h1>말라위호 유역 강화학습 토지이용 배분 연구 해설</h1>
+    <p class="article-subtitle">Yao, Y. (2026). <em>RL-Driven Sustainable Land-Use Allocation for the
+      Lake Malawi Basin</em>. arXiv:2604.03768</p>
+    <p class="byline">AI 생성 · 김경호 검토</p>
+    <p class="article-meta">
+      <span class="date">2026.08.27</span> · <em>Reinforcement learning · Land-use planning · Ecosystem services</em>
+    </p>
+  </header>
+
+  <p class="article-abstract">
+    본 고는 위 논문을 소개하는 해설이다. Yao(2026)는 말라위호 서안 25 × 25 km 구역의 토지이용 배분을
+    강화학습 문제로 정식화하고, 생태계서비스 가치와 공간 배치 지표를 결합한 값을 보상으로 하여 배분
+    정책을 학습시켰다. 본 고는 해당 보상함수의 구성 원리를 단계적으로 검토하며, 저자가 부록에서 제시한
+    절제 실험을 함께 다룬다. 공간 항을 제거한 조건에서
+    동일한 알고리즘이 시가지 비율 38%의 난개발안을 산출하였다는 점은, 이 접근을 계획 도구로 활용할 때 결과
+    지도와 목적함수를 함께 읽어야 함을 시사한다.
+  </p>
+
+
+  <div class="article-body">
+
+    <section id="glossary">
+      <h2>약어와 기호</h2>
+      <p>본문에 쓰이는 약어를 먼저 정리한다. 각 용어는 처음 등장하는 자리에서 다시 풀어 쓰며,
+        수식 기호의 정의는 「보상함수의 단계적 구성」 절의 변수 목록에서 다룬다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">RL</span>
+          <span class="data-value">Reinforcement Learning</span>
+          <span class="data-note">강화학습. 정답 자료 없이 시행착오로 누적 보상을 최대화하는 행동 규칙을 학습하는 계열</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">PPO</span>
+          <span class="data-value">Proximal Policy Optimization</span>
+          <span class="data-note">근위 정책 최적화. 갱신 폭을 제한하여 학습을 안정화하는 정책 경사 알고리즘</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">MaskablePPO</span>
+          <span class="data-value">Maskable PPO</span>
+          <span class="data-note">행동 마스크를 결합한 PPO 변형. SB3-Contrib 라이브러리 구현을 사용</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">CNN</span>
+          <span class="data-value">Convolutional Neural Network</span>
+          <span class="data-note">합성곱 신경망. 격자 자료에서 국소 이웃 관계를 학습하는 구조</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">ESV</span>
+          <span class="data-value">Ecosystem Service Value</span>
+          <span class="data-note">생태계서비스 가치. 생태계가 제공하는 편익의 화폐 환산액(USD/ha/yr)</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">ET</span>
+          <span class="data-value">Evapotranspiration</span>
+          <span class="data-note">증발산. 본 연구에서는 보상이 아니라 에피소드 종료 조건으로만 사용</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">ΔV</span>
+          <span class="data-value">Delta total value</span>
+          <span class="data-note">에피소드 전후 총가치의 변화량. 방법 간 성능 비교 지표로 사용</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">WorldCover</span>
+          <span class="data-value">ESA WorldCover</span>
+          <span class="data-note">유럽우주국(ESA)이 배포하는 전 지구 10 m 해상도 토지피복 자료</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">MOD16A3GF</span>
+          <span class="data-value">MODIS Global Evapotranspiration</span>
+          <span class="data-note">MODIS 위성의 연 단위 증발산 산출물. 500 m 해상도</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="tradeoff">
+      <h2>토지이용 상충과 정량적 판단의 공백</h2>
+      <p>습지를 농경지로 전환하면 식량 생산은 증가하는 반면 홍수 조절과 영양물질 여과 기능은 감소한다.
+        증가한 편익과 감소한 편익은 측정 단위가 서로 다르고 귀속되는 집단이 상이하며 발현되는 시점 또한
+        일치하지 않는다. 따라서 토지이용 계획을 수립하려면 이러한 상충을 공통의 척도 위에서 비교해야 하지만,
+        그 척도를 구성하는 절차는 아직 표준화되어 있지 않다.</p>
+
+      <p>공간 배치에서 비롯되는 어려움도 존재한다. 동일한 면적의 산림이라도 분산되어 있을 때와 집단화되어
+        있을 때 생태적 기능이 달라지기 때문이다. 서식지가 단편화되면 종의 존속 확률이 저하되며(Fahrig,
+        2003), 수변에 인접한 경작지와 일정 거리를 둔 경작지는 하천 수질에 서로 다른 영향을 미친다(Lowrance
+        et al., 1984). 즉 배분의 가치는 개별 격자 가치의 단순 합으로 환원되지 않으며, 이웃 격자와의 관계가
+        값의 일부를 구성한다.</p>
+
+      <p>말라위호 유역은 두 어려움이 동시에 나타나는 지역이다. 아프리카에서 세 번째로 큰 이 호수에는
+        1,000종이 넘는 고유 시클리드가 서식하며, 500만 명 이상이 어업과 농업, 용수 공급에 생계를 의존하고
+        있다. 한편 삼림 벌채와 경작지 확장, 계획되지 않은 도시화가 함께 진행되면서 이러한 생태계서비스의
+        기반이 잠식되고 있다. 결국 무엇을 어디에 배치할 것인지는 정량적으로 답해야 할 문제이지만, 그 답을
+        산출하는 절차가 아직 마련되어 있지 않다.</p>
+    </section>
+
+    <section id="esv">
+      <h2>생태계서비스 가치와 편익이전</h2>
+      <p>상충을 비교하려면 공통 단위가 필요하다. 생태계가 인간에게 제공하는 편익은 식량과 담수 같은 공급
+        서비스, 기후 조절과 수질 정화 같은 조절 서비스, 경관과 여가 같은 문화 서비스로 구분된다. 이들을
+        화폐 단위로 환산하여 합산하는 회계 방식을 생태계서비스 가치(ecosystem service value, ESV)라 한다.</p>
+
+      <p>대상지마다 가치를 새로 추정하는 데에는 상당한 비용이 소요된다. 이에 다른 지역에서 추정된 단위
+        가치(USD/ha/yr)를 생물군계 유형을 매개로 이전하여 적용하는 편익이전(benefit transfer)이 널리 쓰인다.
+        Costanza 외(2014)가 300건이 넘는 사례연구를 종합하여 제시한 단위 가치표가 사실상의 참조 기준으로
+        활용되고 있다. 논문은 이 가운데 생물군계 간 비율만을 차용하고, 절대 수준은 말라위 남부 Lake Chiuta
+        습지를 평가한 현지 연구의 US$554/ha/yr에 맞추어 보정하였다(Zuze, 2013).</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">습지</span>
+          <span class="data-value">1,136</span>
+          <span class="data-note">flooded · 보호 클래스 · 정규화 1.00</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">물</span>
+          <span class="data-value">554</span>
+          <span class="data-note">water · 보호 클래스 · 현지 평가 기준값</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">경작지</span>
+          <span class="data-value">332</span>
+          <span class="data-note">crops · 가변 · 정규화 0.29 · 기본값 246 × 1.35</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">시가지</span>
+          <span class="data-value">295</span>
+          <span class="data-note">built area · 가변 · 정규화 0.26</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">나무</span>
+          <span class="data-value">238</span>
+          <span class="data-note">trees · 가변 · 정규화 0.21</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">초지</span>
+          <span class="data-value">184</span>
+          <span class="data-note">rangeland · 가변 · 정규화 0.16</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">나지</span>
+          <span class="data-value">0</span>
+          <span class="data-note">bare ground · 가변 · 정규화 0.00</span>
+        </div>
+      </div>
+
+      <p>표의 값은 USD/ha/yr이며, 정규화는 아홉 개 클래스 전체의 최솟값과 최댓값을 기준으로 수행된다.
+        따라서 최댓값 1.00은 습지에 부여된다. 에이전트가 실제로 변경할 수 있는 다섯 클래스만을 놓고 보면
+        순위는 경작지 0.29 &gt; 시가지 0.26 &gt; 나무 0.21 &gt; 초지 0.16 &gt; 나지 0.00으로 정렬된다.</p>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">계수는 관측이 아니라 선택이다</p>
+        <p>경작지 계수 332는 기본값 246에 1.35배를 적용한 값이다. 이 배수는 재생농업 전환을 가정한 정책
+          시나리오에서 도출된 것으로, 관측을 통해 확인된 값이 아니다. 즉 계수 하나를 조정함으로써 경작지가
+          나무와 시가지를 모두 상회하게 되며, 격자별 가치만을 기준으로 하면 조림보다 경작이 유리한 구조가
+          형성된다. 이러한 배열이 어떤 결과를 낳는지는 뒤의 절제 실험(ablation)에서 확인할 수 있다.</p>
+      </div>
+    </section>
+
+    <section id="grid">
+      <h2>격자 기반 정식화와 문제의 난도</h2>
+      <p>대상지는 말라위호 서안의 25 × 25 km 구역이다(위도 −13.9346°, 경도 34.5429°). 토지피복은 ESA WorldCover 2024년 10 m 자료를 사용하되, 10 × 10 화소마다 최빈 클래스를
+        취하여 100 m로 낮추고, 다시 5 × 5 화소를 하나의 셀로 묶어 500 m 해상도의 50 × 50 격자를 구성한다.
+        각 셀은 클래스별 화소 수를 담은 아홉 개 차원의 벡터로 표현되며, 이것이 곧 해당 셀의 토지이용
+        구성비에 해당한다.</p>
+
+      <figure class="figure-image">
+        <img src="../assets/briefs/rl-landuse-lake-malawi/study-region.jpg" alt="말라위호 서안의 위성 영상. 주황색 사각형이 25 × 25 km 대상 구역을 표시하고, 오른쪽 절반은 호수, 왼쪽은 경작지와 초지가 섞인 육지다." loading="lazy">
+        <figcaption>그림 1. 말라위호 서안의 대상 구역. 주황색 테두리 안이 25 × 25 km 분석 범위이며, 면적의 45.2%가 호수에 해당한다. (출처: Yao, 2026, Fig. 1)</figcaption>
+      </figure>
+
+      <p>초기 구성은 물 45.2%, 경작지 24.5%, 초지 19.7%, 시가지 7.9%, 습지 2.4%, 나무 0.3%, 나지
+        0.1%이다. 이 가운데 물, 습지, 눈얼음, 구름 네 클래스는 보호 대상으로 지정되어 에이전트가 관측하거나
+        변경할 수 없으며, 나머지 다섯(나무, 경작지, 시가지, 나지, 초지)이 관측과 행동의 범위를 구성한다.</p>
+
+      <p>문제의 난도는 여기에서 발생한다. 한 셀의 최선 선택이 이웃 셀의 상태에 의존하므로, 격자마다
+        독립적으로 가치가 가장 높은 클래스를 선택하는 방식으로는 연결성과 수변 완충이 확보되지 않는다.
+        즉 배치를 동시에 결정해야 하는데, 그 조합의 수가 직접 탐색할 수 있는 규모를 넘어선다. 학습에
+        사용되는 10 × 10 셀 부분격자만 보더라도 한 번의 행동이 (셀, 원천 클래스, 목표 클래스)의 조합으로
+        정의되므로 매 스텝 2,500가지 선택지가 발생하며, 한 에피소드는 최대 500스텝까지 진행된다.</p>
+
+      <p>상태가 존재하고 행동이 상태를 변화시키며 성과가 누적된 결과로만 평가되는 구조는
+        강화학습(reinforcement learning, RL)이 다루는 전형적인 문제 형태이다. 강화학습은 정답이 표시된
+        자료로 입력과 출력의 대응을 학습하는 지도학습(supervised learning)과 달리, 어떤 배분이 옳은지를
+        미리 알려 주는 정답 지도가 없는 상황에서 시행착오를 통해 행동 규칙을 찾는다. 토지이용 배분에는
+        비교 대상이 될 정답 지도가 존재하지 않으므로 이 계열이 선택된다.</p>
+
+      <p>강화학습의 구성은 다섯 가지 요소로 정리된다. 의사결정 주체인 에이전트(agent)가 환경(environment)의
+        현재 상태(state)를 관측하고 행동(action)을 선택하면, 환경은 상태를 갱신하고 보상(reward)을 돌려준다.
+        이 과정을 종료 조건까지 반복한 한 회분을 에피소드(episode)라 하며, 상태를 행동에 대응시키는 규칙을
+        정책(policy)이라 한다. 즉 학습의 목표는 한 번의 보상이 아니라 에피소드 전체에서 누적된 보상을
+        최대화하는 정책을 찾는 데 있다. 이 연구에서 각 요소가 무엇에 대응하는지는 다음과 같다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">에이전트</span>
+          <span class="data-value">배분 정책망</span>
+          <span class="data-note">agent · 매 스텝 하나의 전환을 선택한다</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">환경</span>
+          <span class="data-value">격자와 보상 계산기</span>
+          <span class="data-note">environment · 전환을 반영하고 가치 변화를 돌려준다</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">상태</span>
+          <span class="data-value">5채널 10 × 10 분율 지도</span>
+          <span class="data-note">state · 보호 클래스는 관측에서 제외된다</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">행동</span>
+          <span class="data-value">(셀, 원천, 목표) 조합</span>
+          <span class="data-note">action · 5화소를 이전한다. 매 스텝 2,500가지</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">보상</span>
+          <span class="data-value">총가치의 변화량</span>
+          <span class="data-note">reward · 생태 가치 항과 공간 배치 항의 합</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">에피소드</span>
+          <span class="data-value">최대 500스텝</span>
+          <span class="data-note">episode · 종료 조건에 도달하면 격자를 초기 상태로 되돌린다</span>
+        </div>
+      </div>
+
+      <p>도시계획 분야에서는 이미 동일한 틀이 적용된 바 있다. Zheng 외(2023)는 그래프 신경망과 결합하여 근린 접근성을 최적화하였고, Shen
+        외(2025)는 항저우 격자를 대상으로 교통 부문 탄소배출을 저감하는 배분을 학습시켰다. 이 논문은 동일한
+        틀을 도시가 아닌 생태 유역에 적용하고, 목적을 배출 저감에서 ESV 최대화로 전환한 점에서 차이가 있다.</p>
+    </section>
+
+    <section id="reward">
+      <h2>보상함수의 단계적 구성</h2>
+      <p>보상은 상태 가치의 증가분으로 정의된다. 즉 매 스텝의 보상은 행동 전후 총가치의 차이이며,
+        총가치는 두 부분으로 구분된다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">r<sub>t</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">V(s<sub>t+1</sub>) − V(s<sub>t</sub>)</span>
+          </div>
+          <div class="eq-line">
+            <span class="eq-lhs">V(s)</span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">V<sub>eco</sub>(s) + V<sub>spatial</sub>(s)</span>
+          </div>
+        </div>
+      </figure>
+
+      <p>가장 단순한 형태는 총가치를 셀별 ESV의 합, 곧 V<sub>eco</sub> 하나로 한정하는 것이다. 그러나
+        이렇게 구성하면 에이전트는 가치가 낮은 클래스를 가치가 높은 클래스로 계속 전환할 뿐, 그 배치가
+        어떤 형상을 이루는지는 고려하지 않는다. 이웃 관계가 값을 구성한다는 앞 절의 문제가 그대로 남는
+        것이다. 두 번째 항 V<sub>spatial</sub>이 이 부분을 담당한다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">V<sub>spatial</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">w<sub>T</sub>C<sub>T</sub> + w<sub>C</sub>C<sub>C</sub> + w<sub>B</sub>C<sub>B</sub></span>
+          </div>
+          <div class="eq-line">
+            <span class="eq-lhs"></span>
+            <span class="eq-op"></span>
+            <span class="eq-rhs">− w<sub>W</sub>P<sub>W</sub> + w<sub>R</sub>B<sub>R</sub></span>
+          </div>
+        </div>
+      </figure>
+
+      <p>V<sub>spatial</sub>은 세 개의 연결성 점수와 하나의 페널티, 하나의 보너스로 구성된다. 연결성
+        점수는 특정 클래스가 얼마나 집단화되어 있는지를 측정하며, 각 셀의 해당 클래스 분율에 상하좌우 네
+        이웃의 같은 클래스 분율 합을 곱하여 전체를 합산하는 방식으로 산출된다. 따라서 같은 클래스가
+        인접할수록 값이 커진다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">C<sub>c</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">ln ( 1 + Σ s<sub>c</sub> · (K ∗ s<sub>c</sub>) )</span>
+          </div>
+        </div>
+      </figure>
+
+      <p>로그를 적용한 이유는 신호의 균형에 있다. 이 곱의 합은 집단 크기에 대해 대략 제곱으로 증가하므로,
+        그대로 두면 이미 규모가 큰 패치 하나가 보상 전체를 지배하고 나머지 항이 묻히게 된다. ln(1 + ·)은
+        이 범위를 압축함으로써 항 사이의 균형을 유지한다. 아래 그림에서 동일한 개수의 셀을 분산 배치한
+        경우와 집단 배치한 경우의 점수 차이를 확인할 수 있다.</p>
+
+      <div class="explorer-box">
+        <canvas id="contig-explorer" role="img" aria-label="10 × 10 격자 위에 25개의 나무 셀을 배치한 그림. 슬라이더를 올리면 흩어져 있던 셀이 가운데로 모이고 연결성 점수가 커진다."></canvas>
+        <div class="slider-group">
+          <div class="slider-row">
+            <label for="contig-slider">군집도</label>
+            <input type="range" id="contig-slider" min="0" max="1" step="0.02" value="0">
+            <span class="slider-val" id="contig-val" aria-live="polite">0.00</span>
+          </div>
+          <button id="contig-reset" class="reset-btn">초기화</button>
+        </div>
+      </div>
+
+      <p>수변 처리는 두 개의 항으로 나뉜다. 페널티 P<sub>W</sub>는 물에 인접한 셀의 경작지와 시가지
+        분율을 같은 방식으로 합산하여 차감하며, 보너스 B<sub>R</sub>은 부호를 반대로 하여 수변에 나무가
+        배치된 경우 이를 가산한다. 즉 앞의 항은 위반을 억제하는 방향으로, 뒤의 항은 복원을 유인하는
+        방향으로 작동한다.</p>
+
+      <figure class="figure-equations">
+        <div class="equations-display">
+          <div class="eq-line">
+            <span class="eq-lhs">P<sub>W</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">ln ( 1 + Σ (s<sub>crop</sub> + s<sub>built</sub>) · (K ∗ w) )</span>
+          </div>
+          <div class="eq-line">
+            <span class="eq-lhs">B<sub>R</sub></span>
+            <span class="eq-op">=</span>
+            <span class="eq-rhs">ln ( 1 + Σ s<sub>tree</sub> · (K ∗ w) )</span>
+          </div>
+        </div>
+      </figure>
+
+      <dl class="var-list">
+        <div class="var-row"><dt>s<sub>c</sub></dt><dd>가변 클래스 c가 각 셀에서 차지하는 분율의 10 × 10 지도. 다섯 장을 겹친 것이 곧 관측이다.</dd></div>
+        <div class="var-row"><dt>ẽ</dt><dd>정규화된 ESV 계수. V<sub>eco</sub>는 모든 셀·클래스에 대한 s · ẽ의 합이다.</dd></div>
+        <div class="var-row"><dt>K</dt><dd>4근방 커널. 상하좌우 네 칸만 1인 3 × 3 행렬이고, ∗는 경계를 0으로 채운 2차원 합성곱이다.</dd></div>
+        <div class="var-row"><dt>w</dt><dd>보호 수역의 분율 지도. 관측에서는 빠지지만 페널티와 보너스 계산에는 계속 쓰인다.</dd></div>
+        <div class="var-row"><dt>Σ</dt><dd>격자의 모든 셀에 대한 합. 곱은 셀별로 계산한 뒤 더한다.</dd></div>
+      </dl>
+
+      <p>가중치는 아래와 같이 고정된다. 다만 수변 페널티 가중치는 학습 초반 60% 구간에서 1에서 6으로
+        선형 증가시키는데, 이는 정책이 이득이 되는 전환을 먼저 학습하도록 한 뒤 제약을 단계적으로 강화하기
+        위한 설계이다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">경작지 연결성 w<sub>C</sub></span>
+          <span class="data-value">4.0</span>
+          <span class="data-note">가장 큰 공간 보상</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">시가지 연결성 w<sub>B</sub></span>
+          <span class="data-value">2.0</span>
+          <span class="data-note">개발의 밀집 유도</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">나무 연결성 w<sub>T</sub></span>
+          <span class="data-value">1.0</span>
+          <span class="data-note">서식지 연결성</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">수변 페널티 w<sub>W</sub></span>
+          <span class="data-value">6.0</span>
+          <span class="data-note">학습 초반 60% 동안 1 → 6으로 증가</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">수변 조림 보너스 w<sub>R</sub></span>
+          <span class="data-value">5.0</span>
+          <span class="data-note">물가 조림의 복원 유인</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p class="callout-title">금지는 마스크로, 선호는 보상으로</p>
+        <p>물에 인접한 셀에 경작지나 시가지를 새로 배치하는 행동은 애초에 선택지에서 제외된다. 매 스텝
+          2,500개 조합마다 실행 가능 여부와 수변 규칙을 함께 판정하는 불리언 마스크를 생성하고, 정책은 그
+          위에서만 확률을 배분하기 때문이다(Huang &amp; Ontañón, 2022). 위반을 벌점으로만 다룰 경우 정책이
+          비용을 감수하고 위반을 선택할 수 있으나, 마스크로 다루면 해당 선택지 자체가 존재하지 않는다.
+          법정 규제와 정책적 선호를 동일한 층위에서 처리하지 않는다는 점에서, 계획 도구로 이전할 때 그대로
+          적용할 만한 구분이다.</p>
+      </div>
+
+      <p>다만 마스크는 새로운 위반을 차단할 뿐 기존 위반을 되돌리지는 못한다. 수변에서 벗어나는 방향의
+        전환, 이를테면 시가지를 나무로 되돌리는 행동은 계속 허용되며, 실제 복원을 유인하는 역할은 페널티와
+        수변 조림 보너스가 담당한다.</p>
+
+      <p>학습 알고리즘으로는 근위 정책 최적화(Proximal Policy Optimization, PPO)를 사용한다. PPO는
+        정책을 직접 매개변수화하여 갱신하는 정책 경사(policy gradient) 계열의 방법으로, 한 번의 갱신에서
+        정책이 직전 정책으로부터 지나치게 멀어지지 않도록 변화 폭을 제한하는 점이 특징이다. 이 제한이
+        없으면 큰 갱신 한 번으로 정책이 무너져 학습이 회복되지 않는데, PPO는 갱신 비율을 일정 구간으로
+        잘라 냄으로써 이를 방지한다(Schulman et al., 2017). 본 연구가 사용한 MaskablePPO는 여기에 앞의
+        행동 마스크를 결합한 변형으로, 마스크가 배제한 행동에는 확률이 배분되지 않도록 정책 분포를
+        제한한다(Huang &amp; Ontañón, 2022; Raffin et al., 2021).</p>
+
+      <p>신경망은 5채널 10 × 10 관측을 두 층의 합성곱 신경망(convolutional neural network, CNN)으로
+        처리한다. 첫 층의 3 × 3 수용영역은 연결성 계산에 사용된 4근방 커널과 구조적으로 대응하도록
+        설계되었으며, 스트라이드 2인 둘째 층은 격자를 5 × 5로 축소하면서 여러 셀에 걸친 군집 패턴을
+        포착한다. 이렇게 얻은 128차원 특징은 행동 확률을 산출하는 행위자(actor) 부분과 상태 가치를
+        추정하는 비평자(critic) 부분이 공유하며, 전체 학습은 150만 스텝에 걸쳐 수행되었다.</p>
+
+      <p>증발산(evapotranspiration, ET)은 보상에 포함되지 않고 종료 조건으로만 활용된다. MODIS
+        MOD16A3GF 2024년 자료에서 클래스별 연간 증발산을 산정한 뒤, 배분 변경으로 총 증발산이 허용 범위를
+        넘어 감소하면 에피소드를 종료하는 방식이다. 클래스별로는 나무가 933.6 kg/m²/yr로 가장 높고 나지가
+        591.5로 가장 낮다. 물순환을 크게 훼손하는 해를 배제하기 위한 장치이나, 기본 설정의 허용 감소폭이
+        100%로 지정되어 있어 실질적인 구속력은 확보되지 않는다.</p>
+    </section>
+
+    <section id="policy">
+      <h2>학습된 정책의 배분 결과</h2>
+      <p>학습된 정책을 원래 격자에 복원하면 세 가지 움직임이 중첩되어 나타난다. 경작지는 초지와 나지를
+        흡수하면서 24.5%에서 30.7%로 증가하고, 나무와 시가지는 분산되지 않은 채 집단 단위로
+        확장된다(각각 0.3%→7.8%, 7.9%→13.6%). 한편 수변에서는 기존의 시가지와 경작지가 나무로 전환되는데,
+        마스크가 새로운 침범을 차단하는 동안 페널티와 조림 보너스가 잔존 위반을 제거한 결과이다. 그 대가로
+        초지는 19.7%에서 0.3%까지 감소하여 사실상 소멸한다.</p>
+
+      <figure class="figure-image">
+        <img src="../assets/briefs/rl-landuse-lake-malawi/allocation-headline.png" alt="최적화 전후의 토지이용 배분 히트맵 두 장. 오른쪽 지도에서 초록색 나무 셀과 붉은 시가지 셀이 덩어리로 뭉쳐 있고 초지가 사라졌다." loading="lazy">
+        <figcaption>그림 2. 본문 보상 설정에서의 초기 배분(왼쪽)과 최적화 후 배분(오른쪽). 셀 안의 가로 막대는
+          토지이용 구성비, 배경색은 셀의 총 생태계서비스 가치, 검은 테두리는 에이전트가 변경한 셀이다.
+          범례는 지면 관계로 제외하였다. (출처: Yao, 2026, Fig. 3)</figcaption>
+      </figure>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">나무</span>
+          <span class="data-value">0.3 → 7.8%</span>
+          <span class="data-note">+7.5%p · 물가와 기존 덩어리 주변에 집중</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">경작지</span>
+          <span class="data-value">24.5 → 30.7%</span>
+          <span class="data-note">+6.2%p · 가변 클래스 중 계수가 가장 높음</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">시가지</span>
+          <span class="data-value">7.9 → 13.6%</span>
+          <span class="data-note">+5.7%p · 분산 대신 집중 확장</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">초지</span>
+          <span class="data-value">19.7 → 0.3%</span>
+          <span class="data-note">−19.4%p · 전환의 주된 공급원</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">물·습지</span>
+          <span class="data-value">47.6 → 47.6%</span>
+          <span class="data-note">변화 없음 · 보호 클래스</span>
+        </div>
+      </div>
+
+      <p>이러한 행태가 보상 척도의 인공물이 아니라 수렴의 결과임은 학습 곡선에서 확인된다. 평균 에피소드
+        보상은 초반 5천 스텝에서 급격히 상승한 뒤 13–16 구간에서 안정되며, 에피소드 길이는 학습 전 구간에
+        걸쳐 상한인 500에 머문다. 즉 마스크가 매 스텝 개선 가능한 행동을 지속적으로 제공하였고, 에이전트가
+        주어진 스텝을 끝까지 사용하였음을 의미한다.</p>
+
+      <p>공간 보상을 항별로 분해하면 실제로 작동한 항을 식별할 수 있다. 나무와 시가지 연결성은 꾸준히
+        상승하며, 경작지 연결성은 희소한 출발점으로 인해 0 근처에서 약한 양의 방향으로 이동한다. 한편 수변
+        페널티는 가중치가 1에서 6으로 상향되는 동안에도 0 근처에 머무는데, 새로운 위반이 마스크로 차단된
+        상태에서 기존 위반을 제거하는 만큼만 미세한 음의 값이 남기 때문이다. 따라서 공간 성형을 실제로
+        주도한 항은 나무와 시가지 연결성, 그리고 수변 조림 보너스로 판단된다.</p>
+
+      <p>비교 기준으로는 두 가지가 설정되었다. 하나는 유효한 행동 가운데 균등하게 표본을 추출하는 무작위
+        정책이며, 다른 하나는 한 스텝 앞을 모두 시뮬레이션하여 가장 큰 값을 선택하는 탐욕(greedy)
+        오라클이다. 세 방법은 행동 공간과 마스크, 가치 계산을 공유한다. 증강된 시험 표본 48개 가운데 절반은
+        보호 클래스가 대부분이어서 구조적으로 개선 여지가 없으므로 제외하고, 남은 24개 격자를 대상으로
+        비교한다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">PPO 정책</span>
+          <span class="data-value">ΔV 8.50 ± 4.56</span>
+          <span class="data-note">24개 격자 전부에서 가치 증가(성공률 1.00)</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">탐욕 오라클</span>
+          <span class="data-value">ΔV 12.95 ± 8.76</span>
+          <span class="data-note">24개 격자 전부에서 PPO를 앞섬</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">무작위 정책</span>
+          <span class="data-value">ΔV −4.82 ± 2.49</span>
+          <span class="data-note">성공률 0.04 · 대체로 가치를 훼손</span>
+        </div>
+      </div>
+
+      <figure class="figure-image">
+        <img src="../assets/briefs/rl-landuse-lake-malawi/delta-esv-distribution.png" alt="무작위·탐욕·PPO 세 방법의 총가치 변화량을 그린 상자그림. 무작위는 0 아래, PPO는 중앙값 약 7, 탐욕은 약 11에 위치한다." loading="lazy">
+        <figcaption>그림 3. 24개 유효 시험 격자에서 방법별 총가치 변화량의 분포. 삼각형이 평균이다.
+          (출처: Yao, 2026, Fig. 6)</figcaption>
+      </figure>
+    </section>
+
+    <section id="ablation">
+      <h2>보상 정의에 따른 계획안의 변화</h2>
+      <p>이 연구에서 가장 많은 것을 시사하는 부분은 본문이 아니라 부록의 절제 실험(ablation)이다.
+        알고리즘과 자료, 마스크, 신경망을 동일하게 유지한 채 보상 정의만을 변경한 세 차례의 학습이 서로
+        다른 계획안을 산출하기 때문이다.</p>
+
+      <div class="comparison-grid">
+        <div class="comparison-card">
+          <h3>생태 가치만 반영한 경우</h3>
+          <p>공간 항을 0으로 설정하면 시가지가 7.9%에서 38.4%까지 확대된다. 반면 경작지는 16.4%p
+            감소하고 나무는 3.4%에 그친다. 수변 마스크가 그대로 작동하는 조건에서도 결과는 난개발에
+            가깝다.</p>
+        </div>
+        <div class="comparison-card">
+          <h3>공간 항을 추가하고 계수는 유지한 경우</h3>
+          <p>상향을 적용하지 않은 기본 경작지 계수에서는 나무가 9.5%까지 증가하고 시가지는 17.0%에서
+            억제된다. 경작지는 25.5%로 거의 변화가 없다. 즉 공간 성형만으로도 개발이 억제되고 수변이
+            정비된다.</p>
+        </div>
+        <div class="comparison-card">
+          <h3>공간 항과 계수 상향을 함께 적용한 경우</h3>
+          <p>본문 설정에 해당한다. 나무 7.8%, 경작지 30.7%, 시가지 13.6%로, 계수 하나를 상향한 것만으로
+            전환의 목적지가 시가지에서 경작지로 이동한다.</p>
+        </div>
+      </div>
+
+      <figure class="figure-image">
+        <img src="../assets/briefs/rl-landuse-lake-malawi/allocation-eco-only.png" alt="공간 보상을 제거한 절제 실험의 전후 배분 히트맵. 오른쪽 지도가 붉은 시가지 셀로 뒤덮여 있다." loading="lazy">
+        <figcaption>그림 4. 공간 보상을 제거한 조건에서의 배분. 수변 행동 마스크가 유지된 상태에서도 시가지가
+          7.9%에서 38.4%로 확대된다. (출처: Yao, 2026, Fig. 8)</figcaption>
+      </figure>
+
+      <p>두 축은 서로 다른 기능을 수행한다. 공간 항은 개발이 분산되지 않도록 집단화하고 수변을 정비하며
+        시가지 팽창을 억제한다. 한편 재생농업 계수는 그렇게 억제된 전환이 어디로 향할지를 결정한다. 따라서
+        결과를 설명할 때에는 알고리즘이 무엇을 학습하였는지보다 목적함수에 무엇이 규정되어 있었는지를
+        검토하는 편이 유효하다.</p>
+
+      <div class="callout callout-warn">
+        <p class="callout-title">도구가 내놓는 것은 최적 계획이 아니다</p>
+        <p>이 프레임워크가 산출하는 것은 명시된 목적함수에 대한 근사 최적해이며, 그 목적함수는 분석자가
+          작성한다. 계수 하나와 항 하나의 유무에 따라 시가지 비율이 13.6%와 38.4% 사이에서 갈렸다는 사실은,
+          결과 지도를 해석할 때 반드시 함께 고려되어야 한다.</p>
+      </div>
+    </section>
+
+    <section id="limits">
+      <h2>성능 격차와 남은 제약</h2>
+      <p>저자가 먼저 인정하는 한계는 성능이다. PPO는 탐욕 오라클이 확보한 이득의 약 66%만을 회수하였고,
+        24개 격자 전부에서 뒤처졌다. 다만 격차가 어느 항에서 발생하는지가 더 중요한데, 최종 생태 가치
+        자체는 두 방법이 사실상 동일하며(27.59 대 27.66) 차이는 전부 공간 항에서 나타난다.</p>
+
+      <div class="data-table">
+        <div class="data-row">
+          <span class="data-label">수변 페널티 잔량</span>
+          <span class="data-value">0.357 · 0.000</span>
+          <span class="data-note">PPO가 기존 위반을 끝까지 걷어내지 못함</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">경작지 연결성</span>
+          <span class="data-value">5.23 · 5.45</span>
+          <span class="data-note">탐욕이 근소하게 앞섬</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">시가지 연결성</span>
+          <span class="data-value">3.89 · 4.20</span>
+          <span class="data-note">탐욕이 근소하게 앞섬</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">나무 연결성</span>
+          <span class="data-value">2.30 · 2.08</span>
+          <span class="data-note">PPO가 앞서는 유일한 항</span>
+        </div>
+        <div class="data-row">
+          <span class="data-label">수변 조림 보너스</span>
+          <span class="data-value">0.29 · 0.49</span>
+          <span class="data-note">복원 배치는 탐욕이 더 강함</span>
+        </div>
+      </div>
+
+      <p>표에서 앞의 값은 PPO, 뒤의 값은 탐욕 오라클의 결과이다.</p>
+
+      <p>저자는 세 가지 원인을 지목한다. 첫째, 관측에는 가변 다섯 클래스만 포함되므로 정책은 물과의
+        인접성을 직접 관측할 수 없으나 보상은 바로 그 정보로 계산되며, 이는 부분관측(partial
+        observability)에 해당한다. 둘째, 학습 종료 시점에도 정책 경사 손실과 엔트로피에 여지가 남아 완전히
+        수렴하지 않았다. 셋째, 2,500차원 행동 분포에서 탐색이 충분하지 않았을 가능성이 있다. 나아가 저자는
+        이를 판별할 실험도 함께 제시한다. 탐욕 궤적으로 행동 복제(behavior cloning) 사전학습을 수행한 뒤
+        미세조정하였을 때 탐욕을 따라잡는다면 병목은 학습에 있으며, 그렇지 않다면 관측이나 보상 설계에
+        있다는 것이다.</p>
+
+      <p>계획 도구로 이전하는 관점에서는 더 큰 제약이 남는다. 목적함수에 사람이 포함되어 있지 않기
+        때문이다. 초지가 19.7%에서 0.3%로 감소하는 것은 이 목적함수 안에서 개선으로 계산되지만, 방목에
+        의존하는 생계에는 손실로 귀결된다. 소유권과 전환 비용, 전환에 소요되는 시간, 분배의 형평 가운데
+        어느 것도 보상에 반영되어 있지 않다.</p>
+
+      <p>가치 체계 자체의 불확실성도 크다. 절대 수준은 석사학위 논문 한 편의 습지 평가액에 고정되어
+        있고(Zuze, 2013), 생물군계 간 비율은 전 지구 평균 단위 가치에서 이전되었다. 편익이전은 원 연구지와
+        대상지의 조건 차이만큼 오차를 수반하며, 여기에 정책 가정인 1.35배 상향이 더해진다. 앞서 지적하였듯
+        증발산 제약 또한 허용 감소폭 설정으로 인해 명칭에 상응하는 구속력을 갖지 못한다.</p>
+
+      <p>대상지 역시 하나에 그친다. 25 × 25 km 한 구역에서 확인된 행태가 다른 토지피복 구성에서도
+        유지되는지는 검증되지 않았으며, ESV 계수를 변경할 때 공간 가중치를 함께 재보정해야 하는지도 여전히
+        열려 있는 문제이다.</p>
+    </section>
+
+    <section id="closing">
+      <h2>시나리오 분석 도구로서의 활용</h2>
+      <p>논문 자체의 자리매김은 절제되어 있다. 최적 계획의 산출기가 아니라 시나리오 분석
+        도구(scenario-analysis tool)로 활용하라는 것이다. 즉 결과 지도를 정답으로 해석하는 대신, 가정을
+        변경하였을 때 지도가 어느 방향으로 얼마나 이동하는지를 읽는 용법이다. 이러한 용법에서는 탐욕
+        오라클에 뒤진다는 사실이 결정적인 결함으로 작용하지 않는데, 세 시나리오 사이의 격차가 알고리즘 성능
+        격차보다 훨씬 크기 때문이다.</p>
+
+      <p>국내 맥락으로 이전할 경우 생태계서비스 계수를 국내 평가 연구에 맞추어 재보정하는 작업이 선행되어야
+        한다. 또한 법정 보호구역과 정책적 선호를 각각 마스크와 보상항으로 분리하는 설계도 초기에 확정할
+        필요가 있다. 한편 생계나 형평 같은 항목을 목적함수에 포함할 것인지, 아니면 외부의 검토 절차로 남길
+        것인지는 판단이 갈릴 수 있으나, 어느 쪽을 선택하든 그 결정 자체가 계획안의 성격을 규정한다.</p>
+
+      <p>기술적으로 남은 개선 과제는 비교적 명확하다. 관측에 수변 인접성 채널을 노출하는 것이 우선이며,
+        탐욕 궤적으로 사전학습한 뒤 미세조정하는 실험이 뒤따른다. 대상지를 여러 유역으로 확대하는 작업은 그
+        이후의 과제이다. 다만 이러한 성능 개선이 앞 절에서 지적한 제약을 해소하지는 못한다. 보상함수에
+        규정되지 않은 것은 계획안에도 반영되지 않기 때문이다.</p>
+    </section>
+
+
+  </div>
+
+  <section class="article-refs">
+    <h2>References</h2>
+    <ul class="references">
+      <li>Costanza, R., d'Arge, R., de Groot, R., Farber, S., Grasso, M., Hannon, B., Limburg, K., Naeem, S.,
+        O'Neill, R. V., Paruelo, J., Raskin, R. G., Sutton, P., &amp; van den Belt, M. (1997). The value of the
+        world's ecosystem services and natural capital. <em>Nature, 387</em>(6630), 253–260.
+        <a href="https://doi.org/10.1038/387253a0">https://doi.org/10.1038/387253a0</a></li>
+      <li>Costanza, R., de Groot, R., Sutton, P., van der Ploeg, S., Anderson, S. J., Kubiszewski, I., Farber, S.,
+        &amp; Turner, R. K. (2014). Changes in the global value of ecosystem services.
+        <em>Global Environmental Change, 26</em>, 152–158.
+        <a href="https://doi.org/10.1016/j.gloenvcha.2014.04.002">https://doi.org/10.1016/j.gloenvcha.2014.04.002</a></li>
+      <li>de Groot, R., Brander, L., van der Ploeg, S., Costanza, R., Bernard, F., Braat, L., Christie, M.,
+        Crossman, N., Ghermandi, A., &amp; Hein, L. (2012). Global estimates of the value of ecosystems and their
+        services in monetary units. <em>Ecosystem Services, 1</em>(1), 50–61.
+        <a href="https://doi.org/10.1016/j.ecoser.2012.07.005">https://doi.org/10.1016/j.ecoser.2012.07.005</a></li>
+      <li>Fahrig, L. (2003). Effects of habitat fragmentation on biodiversity. <em>Annual Review of Ecology,
+        Evolution, and Systematics, 34</em>, 487–515.
+        <a href="https://doi.org/10.1146/annurev.ecolsys.34.011802.132419">https://doi.org/10.1146/annurev.ecolsys.34.011802.132419</a></li>
+      <li>Huang, S., &amp; Ontañón, S. (2022). A closer look at invalid action masking in policy gradient
+        algorithms. <em>The International FLAIRS Conference Proceedings, 35</em>.
+        <a href="https://arxiv.org/abs/2006.14171">https://arxiv.org/abs/2006.14171</a></li>
+      <li>Lowrance, R., Todd, R., Fail, J., Hendrickson, O., Leonard, R., &amp; Asmussen, L. (1984). Riparian
+        forests as nutrient filters in agricultural watersheds. <em>BioScience, 34</em>(6), 374–377.
+        <a href="https://doi.org/10.2307/1309729">https://doi.org/10.2307/1309729</a></li>
+      <li>Millennium Ecosystem Assessment. (2005). <em>Ecosystems and human well-being: Synthesis</em>. Island Press.</li>
+      <li>Raffin, A., Hill, A., Gleave, A., Kanervisto, A., Ernestus, M., &amp; Dormann, N. (2021).
+        Stable-Baselines3: Reliable reinforcement learning implementations. <em>Journal of Machine Learning
+        Research, 22</em>(268), 1–8. <a href="https://jmlr.org/papers/v22/20-1364.html">https://jmlr.org/papers/v22/20-1364.html</a></li>
+      <li>Schulman, J., Wolski, F., Dhariwal, P., Radford, A., &amp; Klimov, O. (2017). Proximal policy optimization
+        algorithms. <em>arXiv</em>. <a href="https://arxiv.org/abs/1707.06347">https://arxiv.org/abs/1707.06347</a></li>
+      <li>Shen, J., Zheng, F., Chen, T., Deng, W., Bellotti, A., Tesema, F. B., &amp; Lucchi, E. (2025). Optimizing
+        urban land-use through deep reinforcement learning: A case study in Hangzhou for reducing carbon emissions.
+        <em>Land, 14</em>(12), 2368. <a href="https://doi.org/10.3390/land14122368">https://doi.org/10.3390/land14122368</a></li>
+      <li>Yao, Y. (2026). <em>RL-driven sustainable land-use allocation for the Lake Malawi Basin</em> (arXiv:2604.03768v3).
+        arXiv. <a href="https://arxiv.org/abs/2604.03768">https://arxiv.org/abs/2604.03768</a></li>
+      <li>Zanaga, D., Van De Kerchove, R., Daels, D., De Keersmaecker, W., Brockmann, C., Kirches, G., Wevers, J.,
+        Cartus, O., Santoro, M., &amp; Fritz, S. (2022). <em>ESA WorldCover 10 m 2021 v200</em>. Zenodo.
+        <a href="https://doi.org/10.5281/zenodo.7254221">https://doi.org/10.5281/zenodo.7254221</a></li>
+      <li>Zheng, Y., Lin, Y., Zhao, L., Wu, T., Jin, D., &amp; Li, Y. (2023). Spatial planning of urban communities
+        via deep reinforcement learning. <em>Nature Computational Science, 3</em>(9), 748–762.
+        <a href="https://doi.org/10.1038/s43588-023-00503-5">https://doi.org/10.1038/s43588-023-00503-5</a></li>
+      <li>Zuze, F. (2013). <em>The economic valuation of Lake Chiuta wetland: A case study of Machinga district</em>
+        [Master's thesis]. University of Malawi, Chancellor College.</li>
+    </ul>
+  </section>
+
+  <p class="colophon">
+    본 고는 Yao(2026, arXiv:2604.03768v3)에 기초한 해설이다. 본문의 수치와 그림은 원 논문에서
+    인용하였으며, 그림의 출처는 각 캡션에 표기하였다. 해석과 논평의 책임은 본 고에 있다.
+  </p>
+
+  <nav class="article-end-nav">
+    <a href="../briefs.html">← 브리프 목록</a>
+  </nav>
+</article>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href="mailto:khkim@kei.re.kr">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+      </svg>
+      khkim@kei.re.kr
+    </a>
+    <div class="address">
+      Bldg. B, Sejong National Research Complex<br>
+      370 Sicheong-daero, Sejong 30147, Republic of Korea
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Random hero bg — picks one of the still-image variants on each load
+  (() => {
+    const variants = [
+      '../assets/hero-bg.jpg',
+      '../assets/hero_blue_v3_poster.png'
+    ];
+    const pick = variants[Math.floor(Math.random() * variants.length)];
+    const bg = document.querySelector('.hero-band__bg');
+    if (bg) bg.style.backgroundImage = `url("${pick}")`;
+  })();
+
+  // Back link
+  (() => {
+    const back = document.getElementById('back-link');
+    if (!back) return;
+    back.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+        history.back();
+      } else {
+        location.href = '../briefs.html';
+      }
+    });
+  })();
+</script>
+
+<script>
+  // ── 연결성 explorer ────────────────────────────────────────────────────────
+  // 10×10 격자에 같은 개수(25개)의 셀을 두고, 배치만 흩어진 상태에서 뭉친 상태로
+  // 옮기며 C = ln(1 + Σ s·(K∗s)) 가 어떻게 변하는지 보인다. 애니메이션 없음,
+  // 스크롤 도달 시 1회 초기화(lazy-start), devicePixelRatio 보정.
+  document.addEventListener('DOMContentLoaded', () => {
+    const GREEN = '#00ab84', INK = '#0f1624';
+    const LINE = 'rgba(15,22,36,.12)', EMPTY = 'rgba(15,22,36,.05)';
+    const N = 10, PICK = 25;
+
+    const cvs = document.getElementById('contig-explorer');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const slider = document.getElementById('contig-slider');
+    const valEl = document.getElementById('contig-val');
+    const resetBtn = document.getElementById('contig-reset');
+
+    // 결정적 해시 노이즈 — 새로고침해도 같은 배치가 나온다.
+    function noise(i, j) {
+      let x = (i * 73856093) ^ (j * 19349663);
+      x = Math.imul(x ^ (x >>> 16), 2246822507);
+      x = Math.imul(x ^ (x >>> 13), 3266489909);
+      x ^= x >>> 16;
+      return (x >>> 0) / 4294967296;
+    }
+
+    const CX = (N - 1) / 2, DMAX = Math.hypot(CX, CX);
+    function layout(t) {
+      const cells = [];
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        const compact = 1 - Math.hypot(i - CX, j - CX) / DMAX;
+        cells.push({ i, j, score: (1 - t) * noise(i, j) + t * compact });
+      }
+      cells.sort((a, b) => b.score - a.score);
+      const g = Array.from({ length: N }, () => new Array(N).fill(0));
+      for (let k = 0; k < PICK; k++) g[cells[k].i][cells[k].j] = 1;
+      return g;
+    }
+
+    // C = ln(1 + Σ s·(K∗s)), K는 4근방 커널
+    function contiguity(g) {
+      let s = 0;
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        if (!g[i][j]) continue;
+        let nb = 0;
+        if (i > 0) nb += g[i - 1][j];
+        if (i < N - 1) nb += g[i + 1][j];
+        if (j > 0) nb += g[i][j - 1];
+        if (j < N - 1) nb += g[i][j + 1];
+        s += nb;
+      }
+      return { C: Math.log(1 + s), pairs: s / 2 };
+    }
+
+    let vw = 0, vh = 0;
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      vw = cvs.parentElement.clientWidth;
+      vh = window.innerWidth < 768 ? 320 : 380;
+      cvs.width = vw * dpr; cvs.height = vh * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function draw() {
+      if (!vw || !vh) return;
+      const t = parseFloat(slider.value);
+      const g = layout(t);
+      const { C, pairs } = contiguity(g);
+
+      ctx.clearRect(0, 0, vw, vh);
+
+      const pad = 44;
+      const side = Math.min(vw - 32, vh - pad - 12);
+      const cell = side / N;
+      const x0 = (vw - side) / 2, y0 = pad;
+
+      for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+        ctx.fillStyle = g[i][j] ? GREEN : EMPTY;
+        ctx.fillRect(x0 + j * cell, y0 + i * cell, cell - 1.5, cell - 1.5);
+      }
+
+      ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+      ctx.strokeRect(x0 - 0.5, y0 - 0.5, side, side);
+
+      ctx.fillStyle = INK;
+      ctx.font = '600 15px "Paperlogy", "Pretendard Variable", system-ui, sans-serif';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('연결성 C = ' + C.toFixed(2), x0, 22);
+      ctx.fillStyle = 'rgba(15,22,36,.62)';
+      ctx.font = '400 13.5px "Paperlogy", "Pretendard Variable", system-ui, sans-serif';
+      ctx.fillText('나무 셀 ' + PICK + '개 · 인접 쌍 ' + pairs + '개', x0, 38);
+    }
+
+    function onInput() {
+      valEl.textContent = parseFloat(slider.value).toFixed(2);
+      draw();
+    }
+    slider.addEventListener('input', onInput);
+    resetBtn.addEventListener('click', () => { slider.value = 0; onInput(); });
+
+    const box = cvs.closest('.explorer-box');
+    const obs = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { resize(); obs.disconnect(); }
+    }), { threshold: 0.1 });
+    obs.observe(box);
+    window.addEventListener('resize', () => { if (vw) resize(); });
+  });
+</script>
+
+</body>
+</html>
