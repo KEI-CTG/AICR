@@ -25,7 +25,7 @@
 ## 3. 표준 HTML 골격
 
 ### 3.1 `<head>`
-- `<title>{제목} · KEI AI 융합연구단</title>`
+- `<title>{제목} · KEI AI 융복합 연구단</title>`
 - `<meta name="description">` 한 줄 요약 (검색·SNS 미리보기용)
 - 폰트 link: Archivo, Inter, JetBrains Mono, Space Grotesk + Paperlogy + Pretendard
 - 경로 접두: `../manifest.json`, `../assets/...`
