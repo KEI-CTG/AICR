@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="AI 융복합 연구단 제2회 월례세미나 발표자료: 하네스 엔지니어링 관점에서 본 에이전트 도구, Claude Code 설치·CLAUDE.md·슬래시 커맨드·Skills, 연구 현장의 활용 사례(논문·보고서 작성, 딥리서치, LLM 위키, 소스코드 분석).">
+<title>AI 도구 활용 실습! — Claude Code 시작하기 · KEI AI 융복합 연구단</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#f6f0e3">
+<link rel="apple-touch-icon" href="../assets/KEI_Wordmark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy.css">
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  :root{
+    --bg:#f6f0e3;
+    --ink:#0f1624;
+    --muted:rgba(15,22,36,.62);
+    --muted-strong:rgba(15,22,36,.82);
+    --faint:rgba(15,22,36,.38);
+    --line:rgba(15,22,36,.12);
+    --blue:#009fde;
+    --green:#00ab84;
+    --amber:#ff8a2a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Paperlogy','Pretendard Variable','Pretendard','Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+    min-height:100vh;
+  }
+  ::selection{ background:rgba(0,159,222,.20); color:var(--ink); }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:24px 64px; border-bottom:1px solid var(--line);
+  }
+  .topbar .logo{ display:flex;align-items:center;gap:10px;text-decoration:none; }
+  .topbar .logo .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+  }
+  .topbar .logo svg{ height:51px; width:auto; display:block }
+  .topbar .logo svg .cls-1{ fill:var(--ink) }
+  .topbar .logo svg .cls-2{ fill:#009fde }
+  .topbar .logo svg .cls-3{ fill:#00ab84 }
+  .topbar .back{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .topbar .back:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+
+  /* ---- Hero band ---- */
+  .hero-band{
+    position:relative; isolation:isolate; overflow:hidden;
+    min-height:180px; padding:24px 64px; background:#05070d;
+    display:flex; align-items:center;     /* vertically center topbar */
+  }
+  .hero-band > .topbar{ width:100%; }
+  .hero-band__bg{
+    position:absolute; inset:0; z-index:1;
+    background:url("../assets/hero-bg.jpg") center/cover no-repeat;
+    filter:saturate(1.08) contrast(1.06);
+  }
+  .hero-band__scrim{
+    position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:
+      linear-gradient(180deg,
+        rgba(7,10,20,.55) 0%,
+        rgba(7,10,20,.22) 30%,
+        transparent 55%,
+        transparent 85%,
+        rgba(7,10,20,.18) 100%);
+  }
+  .hero-band > .topbar{ position:relative; z-index:10; }
+  .hero-band .topbar{ padding:0; border:0; }
+  .hero-band .topbar .logo svg .cls-1{ fill:#e8e6de; }
+  .hero-band .topbar .logo .dot{
+    background:#00e5c5;
+    box-shadow:0 0 18px #00e5c5,0 0 6px #009fde,0 0 3px rgba(255,255,255,.8) inset;
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  .hero-band .topbar .back:hover{
+    color:#ffffff; border-bottom-color:rgba(255,255,255,.45);
+  }
+  @keyframes pulse{
+    0%,100%{ opacity:.55; transform:scale(1) }
+    50%    { opacity:.95; transform:scale(1.08) }
+  }
+
+  /* ---- Article container ---- */
+  .article{
+    max-width:880px;
+    margin:0 auto;
+    padding:56px 32px 96px;
+  }
+
+  .article-header{
+    margin-bottom:40px;
+    padding-bottom:32px;
+    border-bottom:1px solid var(--line);
+  }
+  .page-label{
+    display:flex; align-items:center; gap:14px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:18px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); margin-bottom:24px;
+  }
+  .page-label .dot{
+    width:12px; height:12px; border-radius:50%;
+    background:var(--blue);
+    box-shadow:0 0 14px rgba(0,159,222,.45),0 0 4px rgba(0,171,132,.55),0 0 3px rgba(255,255,255,.8) inset;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  .article-header h1{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px, 3.6vw, 40px);
+    line-height:1.22; letter-spacing:-0.02em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-subtitle{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:clamp(17px, 1.5vw, 20px);
+    font-weight:400; line-height:1.45;
+    color:var(--muted-strong);
+    margin-bottom:24px;
+    letter-spacing:-0.005em;
+  }
+  .byline{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:16px; font-weight:500;
+    color:var(--muted-strong);
+    margin-bottom:6px;
+  }
+  .article-meta{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:14px; font-weight:500;
+    letter-spacing:.04em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .article-meta .date{ color:var(--blue); }
+  .article-meta em{
+    font-style:normal; color:var(--muted-strong); margin-left:4px;
+  }
+
+  /* ---- Slide deck ---- */
+  .deck{ margin:0 0 16px; }
+  .deck__stage{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:rgba(15,22,36,.05);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .deck__stage img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .deck__arrow{
+    position:absolute; top:0; bottom:0;
+    width:68px; padding:0;
+    border:0; background:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity .2s;
+  }
+  .deck__arrow--prev{ left:0 }
+  .deck__arrow--next{ right:0 }
+  .deck__arrow span{
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:50%;
+    background:rgba(246,240,227,.92);
+    border:1px solid var(--line);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px; line-height:1; color:var(--ink);
+  }
+  .deck__stage:hover .deck__arrow,
+  .deck__arrow:focus-visible{ opacity:1 }
+  .deck__arrow[disabled]{ opacity:0; pointer-events:none }
+  @media (hover:none){ .deck__arrow{ opacity:.8 } }
+
+  .deck__bar{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:16px; margin-top:12px;
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:13px; letter-spacing:.04em;
+    color:var(--muted);
+  }
+  .deck__counter{ color:var(--muted-strong) }
+  .deck__counter b{ color:var(--blue); font-weight:500 }
+  .deck__hint{ color:var(--faint) }
+
+  .deck__thumbs{
+    display:flex; gap:8px;
+    margin-top:14px; padding-bottom:6px;
+    overflow-x:auto;
+    scroll-snap-type:x proximity;
+    scrollbar-width:thin;
+  }
+  .deck__thumbs::-webkit-scrollbar{ height:6px }
+  .deck__thumbs::-webkit-scrollbar-thumb{ background:rgba(15,22,36,.18); border-radius:3px }
+  .deck__thumb{
+    flex:none; width:104px; padding:0;
+    border:1px solid var(--line); border-radius:3px;
+    background:none; cursor:pointer; overflow:hidden;
+    opacity:.5; transition:opacity .2s, border-color .2s;
+    scroll-snap-align:center;
+  }
+  .deck__thumb img{ display:block; width:100%; height:auto }
+  .deck__thumb:hover{ opacity:.85 }
+  .deck__thumb[aria-current="true"]{ opacity:1; border-color:var(--blue) }
+
+  /* ---- PDF 원본 링크 ---- */
+  .pdf-actions{
+    display:flex; flex-wrap:wrap; align-items:center;
+    gap:12px 28px;
+    margin:22px 0 46px;
+  }
+  .pdf-actions a{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:2px 0;
+    border-bottom:1px solid transparent;
+    transition:color .25s, border-color .25s;
+  }
+  .pdf-actions a:hover{ color:var(--ink); border-bottom-color:rgba(0,159,222,.45) }
+  .pdf-actions a .arrow{ display:inline-block; transition:transform .2s }
+  .pdf-actions a:hover .arrow{ transform:translateX(2px) }
+  .pdf-actions .pdf-size{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:13px; letter-spacing:.04em;
+    color:var(--faint);
+  }
+
+  /* ---- Abstract ---- */
+  .abstract{
+    font-family:'Paperlogy','Inter',sans-serif;
+    font-size:18px; font-weight:400; line-height:1.8;
+    color:var(--muted-strong);
+    border-left:3px solid var(--blue);
+    padding:6px 0 6px 22px;
+    margin-bottom:48px;
+  }
+
+  /* ---- Body ---- */
+  .article-body{
+    font-size:17px; line-height:1.85;
+    color:var(--muted-strong);
+  }
+  .article-body section{ margin-bottom:40px; }
+  .article-body section:last-child{ margin-bottom:0; }
+  .article-body h2{
+    font-family:'Paperlogy','Archivo',sans-serif;
+    font-weight:700;
+    font-size:clamp(22px, 2.2vw, 28px);
+    line-height:1.25; letter-spacing:-0.01em;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .article-body p{ margin-bottom:14px; }
+  .article-body p:last-child{ margin-bottom:0; }
+  .article-body ul{
+    list-style:none;
+    padding:0; margin:0;
+  }
+  .article-body ul li{
+    position:relative;
+    padding-left:22px;
+    margin-bottom:10px;
+    line-height:1.75;
+  }
+  .article-body ul li::before{
+    content:'';
+    position:absolute;
+    left:4px; top:0.72em;
+    width:8px; height:8px;
+    background:var(--blue);
+    border-radius:50%;
+  }
+  .article-body ul li em{
+    font-style:normal;
+    font-weight:700;
+    color:var(--ink);
+  }
+
+  /* ---- End-of-article nav ---- */
+  .article-end-nav{
+    margin-top:56px;
+    padding-top:28px;
+    border-top:1px solid var(--line);
+  }
+  .article-end-nav a{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase;
+    line-height:28px;
+    color:var(--blue); text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    padding:4px 2px; border-bottom:1px solid transparent;
+    transition:border-color .25s, color .25s;
+  }
+  .article-end-nav a:hover{
+    color:var(--ink); border-bottom-color:rgba(0,159,222,.45);
+  }
+
+  /* ---- Footer ---- */
+  .site-footer{
+    border-top:1px solid var(--line);
+    padding:36px 64px 44px;
+  }
+  .site-footer__inner{
+    max-width:1660px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:48px; flex-wrap:wrap;
+  }
+  .site-footer a{
+    color:var(--ink); text-decoration:none;
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    display:inline-flex; align-items:center; gap:10px;
+    transition:color .2s;
+  }
+  .site-footer a:hover{ color:var(--blue) }
+  .site-footer .address{
+    font-family:'Paperlogy','Space Grotesk',sans-serif;
+    font-size:18px; font-weight:500;
+    line-height:1.4; color:var(--ink);
+    text-align:right;
+  }
+  .mail-icon{ width:18px; height:18px; flex:none; opacity:.9 }
+
+  @media (max-width:768px){
+    .topbar{ padding:16px 24px }
+    .hero-band{ padding:16px 24px; min-height:140px; }
+    .article{ padding:40px 22px 72px; }
+    .article-body{ font-size:16px; }
+    .deck__thumb{ width:84px }
+    .deck__bar{ font-size:12px }
+    .deck__hint{ display:none }
+    .pdf-actions{ gap:10px 20px; margin:18px 0 36px }
+    .pdf-actions a{ font-size:15px }
+    .site-footer{ padding:32px 24px }
+    .site-footer__inner{ flex-direction:column; gap:20px }
+    .site-footer .address{ text-align:left }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero-band">
+  <div class="hero-band__bg" aria-hidden="true"></div>
+  <div class="hero-band__scrim" aria-hidden="true"></div>
+
+  <div class="topbar">
+    <a href="../index.ko.html" class="logo" aria-label="KEI AI 융복합 연구단 홈">
+      <span class="dot" aria-hidden="true"></span>
+      <svg viewBox="83 188 163 76" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="KEI">
+        <g>
+          <path class="cls-1" d="M141.15,254.81h0c0,3.8,2.1,6.7,7.32,6.7h28.95v-9.82h-23.11c-.76,0-1.14-.37-1.14-.99v-8.18h21.85v-9.82h-21.85v-7.92h24.24v-9.82h-36.27v39.85Z"/>
+          <path class="cls-1" d="M117.34,237.61l19.15-22.65h-14.61l-13.9,16.44v-16.44h-12.03v42.34h0c0,2.39,1.32,4.21,4.6,4.21h7.42v-15.74c7.67,2.45,13.83,8.28,16.74,15.74h12.08c-2.87-10.42-10.03-19.05-19.46-23.9Z"/>
+          <path class="cls-1" d="M186.34,214.96v42.34c0,2.39,1.32,4.21,4.6,4.21h7.42v-46.55h-12.03Z"/>
+        </g>
+        <g>
+          <path class="cls-3" d="M233.28,210.31c0,5.14-4.17,9.31-9.31,9.31-1.29,0-2.53-.27-3.65-.74v9.69c1.18.23,2.4.36,3.65.36,10.28,0,18.62-8.34,18.62-18.62,0-1.61-.23-3.16-.61-4.66h-9.96c.79,1.37,1.26,2.96,1.26,4.66Z"/>
+          <path class="cls-2" d="M214.66,210.31c0-5.14,4.17-9.31,9.31-9.31,1.29,0,2.53.27,3.65.74v-9.69c-1.18-.23-2.4-.36-3.65-.36-10.28,0-18.62,8.34-18.62,18.62,0,1.61.23,3.16.61,4.66h9.96c-.79-1.37-1.26-2.96-1.26-4.66Z"/>
+        </g>
+      </svg>
+    </a>
+    <a href="../presentations.html" class="back" id="back-link" aria-label="발표 목록으로">
+      <span aria-hidden="true">←</span><span>Back</span>
+    </a>
+  </div>
+</header>
+
+<article class="article">
+  <header class="article-header">
+    <div class="page-label">
+      <span class="dot" aria-hidden="true"></span>
+      <span>Presentation</span>
+    </div>
+    <h1>AI 도구 활용 실습! — Claude Code 시작하기</h1>
+    <p class="byline">백동해 · AI 융복합 연구단 제2회 월례세미나</p>
+    <p class="article-meta">
+      <span class="date">2026.08.27</span> · 발표자료 36쪽 (PDF)
+    </p>
+  </header>
+
+  <figure class="deck" id="deck">
+    <div class="deck__stage">
+      <img id="deck-img" src="../assets/presentations/pres-claude-code/slide-01.webp"
+           alt="슬라이드 1 — AI 도구 활용 실습! Claude Code 시작하기"
+           width="1600" height="900" decoding="async">
+      <button class="deck__arrow deck__arrow--prev" id="deck-prev" type="button" aria-label="이전 슬라이드" disabled>
+        <span aria-hidden="true">←</span>
+      </button>
+      <button class="deck__arrow deck__arrow--next" id="deck-next" type="button" aria-label="다음 슬라이드">
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+
+    <figcaption class="deck__bar">
+      <span class="deck__counter" aria-live="polite"><b id="deck-cur">01</b> / 36</span>
+      <span class="deck__hint">← → 키로 넘기기 · 썸네일 클릭으로 이동</span>
+    </figcaption>
+
+    <div class="deck__thumbs" id="deck-thumbs" role="group" aria-label="슬라이드 목록">
+      <button class="deck__thumb" type="button" data-i="1" aria-current="true">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-01.webp" alt="슬라이드 1로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="2">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-02.webp" alt="슬라이드 2로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="3">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-03.webp" alt="슬라이드 3로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="4">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-04.webp" alt="슬라이드 4로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="5">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-05.webp" alt="슬라이드 5로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="6">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-06.webp" alt="슬라이드 6로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="7">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-07.webp" alt="슬라이드 7로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="8">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-08.webp" alt="슬라이드 8로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="9">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-09.webp" alt="슬라이드 9로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="10">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-10.webp" alt="슬라이드 10로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="11">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-11.webp" alt="슬라이드 11로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="12">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-12.webp" alt="슬라이드 12로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="13">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-13.webp" alt="슬라이드 13로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="14">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-14.webp" alt="슬라이드 14로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="15">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-15.webp" alt="슬라이드 15로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="16">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-16.webp" alt="슬라이드 16로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="17">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-17.webp" alt="슬라이드 17로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="18">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-18.webp" alt="슬라이드 18로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="19">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-19.webp" alt="슬라이드 19로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="20">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-20.webp" alt="슬라이드 20로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="21">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-21.webp" alt="슬라이드 21로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="22">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-22.webp" alt="슬라이드 22로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="23">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-23.webp" alt="슬라이드 23로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="24">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-24.webp" alt="슬라이드 24로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="25">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-25.webp" alt="슬라이드 25로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="26">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-26.webp" alt="슬라이드 26로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="27">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-27.webp" alt="슬라이드 27로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="28">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-28.webp" alt="슬라이드 28로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="29">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-29.webp" alt="슬라이드 29로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="30">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-30.webp" alt="슬라이드 30로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="31">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-31.webp" alt="슬라이드 31로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="32">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-32.webp" alt="슬라이드 32로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="33">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-33.webp" alt="슬라이드 33로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="34">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-34.webp" alt="슬라이드 34로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="35">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-35.webp" alt="슬라이드 35로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+      <button class="deck__thumb" type="button" data-i="36">
+        <img src="../assets/presentations/pres-claude-code/thumbs/slide-36.webp" alt="슬라이드 36로 이동" width="320" height="180" loading="lazy" decoding="async">
+      </button>
+    </div>
+  </figure>
+
+  <div class="pdf-actions">
+    <a href="../assets/presentations/pres-claude-code-getting-started.pdf" target="_blank" rel="noopener">PDF 원본 열기 <span class="arrow" aria-hidden="true">↗</span></a>
+    <a href="../assets/presentations/pres-claude-code-getting-started.pdf" download>내려받기 <span class="arrow" aria-hidden="true">↓</span></a>
+    <span class="pdf-size">36 slides · 약 1.0 MB</span>
+  </div>
+
+  <p class="abstract">
+    연구 현장에서 AI를 어떻게 쓸 것인가를 &lsquo;모델&rsquo;이 아니라 &lsquo;모델을 둘러싼 실행 환경(하네스)&rsquo;의 문제로 놓고 살펴본다. 웹 챗봇 기반의 수작업이 왜 복사·붙여넣기와 맥락 유실로 이어지는지 짚은 뒤, 파일시스템 접근·코드 직접 실행·프로젝트 맥락을 갖춘 CLI 기반 에이전트가 같은 임무를 어떻게 다르게 수행하는지 비교한다. 이어서 Claude Code의 설치와 기본 셋업, CLAUDE.md·슬래시 커맨드·Skills를 정리하고, 논문 PDF에서 발표자료 제작, 딥리서치, LLM 위키, 수치모델 소스코드 분석까지 실제 연구 작업에 적용한 사례를 단계별 프롬프트와 함께 보여준다.
+  </p>
+
+  <div class="article-body">
+
+    <section>
+      <h2>주요 내용</h2>
+      <ul>
+        <li><em>왜 Chat이 아니라 Agent인가</em> — LLM 활용 패러다임이 프롬프트 엔지니어링(2023~), 컨텍스트 엔지니어링(2024~2025), 하네스 엔지니어링(2026~)으로 이동해 온 흐름을 정리한다. 하네스는 과제를 이해하고 맥락을 유지하며 도구를 부르고 실패를 처리하는 실행 시스템 전체를 뜻하며, Planner(계획) → Generator(생성) → Evaluator(검증)의 피드백 루프로 구현된다.</li>
+        <li><em>웹 챗봇 수작업과의 비교</em> — 수질관측 자료로 예측 모델을 만드는 상황을 예로, 웹 챗봇 방식에서 발생하는 복사·붙여넣기 반복(~30회), 에러 루프(15~25회), 3단계부터의 맥락 유실, 낮은 재현성을 데이터 접근·코드 실행·맥락 유지·결과 검증·산출물 항목별로 에이전트 방식과 대조한다. 에이전트가 성립하려면 파일시스템 접근, 코드 직접 실행, 프로젝트 맥락 세 가지가 모두 필요하므로 CLI 기반 도구여야 한다는 점을 짚고, Claude Code · Codex · Antigravity를 비교한다.</li>
+        <li><em>시작하기 — 설치 · 셋업 · Skills</em> — 한 줄 설치 명령과 첫 실행·로그인, <em>/init</em>으로 만드는 CLAUDE.md의 역할(데이터 규약·코드 규칙·결과물 형식을 200줄 이내로 고정), 비개발 연구자에게 실제로 쓸모 있는 슬래시 커맨드 10여 개, 그리고 전문 지식 + 작업 절차 + 품질 기준을 묶어 재사용하는 Skills 개념과 <em>/pptx</em> 스킬의 내부 동작을 다룬다.</li>
+        <li><em>Level 1 · 읽고 쓰기</em> — SCI 논문 PDF를 읽혀 국제학술대회 발표자료를 만드는 과정을 규칙 수립 → 개요 설계 → 섹션별 작성 → 논리·사실 검수의 순서로, 실제 입력한 프롬프트 여섯 개와 함께 보여준다. 논문·보고서 작성에서는 챕터·소챕터 단위로 나누어 쓰고 문단별로 사람이 감독·승인하는 절차를 권고한다.</li>
+        <li><em>Level 2 · 같이 생각하기</em> — 여러 서브에이전트를 병렬로 부리는 <em>/deep-research</em> 워크플로, 답이 아니라 질문을 받기 위한 <em>grill-me</em> 스킬, 그리고 자료를 넣을 때마다 LLM이 요약·상호참조를 갱신하는 &lsquo;LLM 위키&rsquo; 패턴(원본 자료 · 위키 · 규칙의 3층 구조와 넣기 · 묻기 · 점검의 3동작)을 소개한다.</li>
+        <li><em>Level 3 · 코드 실행</em> — GitHub의 EFDC 소스코드를 받아 구조 파악부터 Fortran 빌드·예제 실행·결과 시각화까지 자동으로 수행한 사례, 수온 계산 모듈을 분석해 열교환 항을 추가하는 커스텀 모듈 작업(Plan Mode로 설계안을 먼저 승인)을 다룬다. 복잡하고 긴 작업일수록 CLAUDE.md → PRD.md → workflow.md → 단계별 실행·기록(log.md) 순으로 쪼개 진행할 것을 강조한다.</li>
+        <li><em>핵심 메시지</em> — ① 결과를 바꾸는 것은 모델 자체보다 그 모델이 놓인 시스템(하네스)이다. ② 새로운 것을 만들 때는 큰 계획부터 세우고 세부 계획으로 조각내어 문서로 통제한다. ③ 설치 1분, <em>/init</em> 한 번이면 시작할 수 있다.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>대상</h2>
+      <p>데이터 분석과 모델링, 보고서 작성을 직접 수행하는 환경 분야 연구자, 그리고 AI 도구를 연구 업무에 어떻게 도입할지 검토 중인 실무자를 주요 청중으로 상정한다. 코딩 경험이 없어도 따라올 수 있도록 설치부터 실제 프롬프트까지 단계별로 구성했다.</p>
+    </section>
+
+  </div>
+
+  <nav class="article-end-nav">
+    <a href="../presentations.html">
+      <span aria-hidden="true">←</span><span>All</span>
+    </a>
+  </nav>
+</article>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href="mailto:khkim@kei.re.kr">
+      <svg class="mail-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+      </svg>
+      khkim@kei.re.kr
+    </a>
+    <div class="address">
+      Bldg. B, Sejong National Research Complex<br>
+      370 Sicheong-daero, Sejong 30147, Republic of Korea
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Random hero bg — picks one of the still-image variants on each load
+  (() => {
+    const variants = [
+      '../assets/hero-bg.jpg',
+      '../assets/hero_blue_v3_poster.png'
+    ];
+    const pick = variants[Math.floor(Math.random() * variants.length)];
+    const bg = document.querySelector('.hero-band__bg');
+    if (bg) bg.style.backgroundImage = `url("${pick}")`;
+  })();
+
+  // Back link
+  (() => {
+    const back = document.getElementById('back-link');
+    if (!back) return;
+    back.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (history.length > 1 && document.referrer && new URL(document.referrer).origin === location.origin) {
+        history.back();
+      } else {
+        location.href = '../presentations.html';
+      }
+    });
+  })();
+</script>
+
+<script>
+  // Slide deck — 이미지 기반 뷰어 (키보드 · 썸네일 · 스와이프 · #s= 딥링크)
+  (() => {
+    const TOTAL = 36;
+    const PATH  = '../assets/presentations/pres-claude-code/slide-';
+    const img   = document.getElementById('deck-img');
+    const cur   = document.getElementById('deck-cur');
+    const prev  = document.getElementById('deck-prev');
+    const next  = document.getElementById('deck-next');
+    const strip = document.getElementById('deck-thumbs');
+    const stage = img.parentElement;
+    if (!img) return;
+
+    const thumbs = Array.from(strip.querySelectorAll('.deck__thumb'));
+    const pad = n => String(n).padStart(2, '0');
+    const url = n => PATH + pad(n) + '.webp';
+    let i = 1;
+
+    const preload = n => { if (n >= 1 && n <= TOTAL) new Image().src = url(n); };
+
+    function show(n, { scroll = true, push = true } = {}) {
+      n = Math.min(Math.max(n, 1), TOTAL);
+      i = n;
+      img.src = url(n);
+      img.alt = '슬라이드 ' + n + ' / ' + TOTAL;
+      cur.textContent = pad(n);
+      prev.disabled = (n === 1);
+      next.disabled = (n === TOTAL);
+      thumbs.forEach((b, k) => {
+        if (k + 1 === n) b.setAttribute('aria-current', 'true');
+        else b.removeAttribute('aria-current');
+      });
+      if (scroll) thumbs[n - 1].scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+      if (push) history.replaceState(null, '', '#s=' + n);
+      preload(n + 1); preload(n - 1);
+    }
+
+    prev.addEventListener('click', () => show(i - 1));
+    next.addEventListener('click', () => show(i + 1));
+    thumbs.forEach(b => b.addEventListener('click', () => show(Number(b.dataset.i))));
+
+    document.addEventListener('keydown', e => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { show(i + 1); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(i - 1); e.preventDefault(); }
+      else if (e.key === 'Home') { show(1); e.preventDefault(); }
+      else if (e.key === 'End') { show(TOTAL); e.preventDefault(); }
+    });
+
+    // 모바일 스와이프
+    let x0 = null, y0 = null;
+    stage.addEventListener('touchstart', e => {
+      x0 = e.changedTouches[0].clientX; y0 = e.changedTouches[0].clientY;
+    }, { passive: true });
+    stage.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      const dy = e.changedTouches[0].clientY - y0;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) show(dx < 0 ? i + 1 : i - 1);
+      x0 = y0 = null;
+    }, { passive: true });
+
+    // #s=12 로 들어오면 해당 슬라이드부터
+    const m = /^#s=(\d+)$/.exec(location.hash);
+    show(m ? Number(m[1]) : 1, { scroll: !!m, push: false });
+  })();
+</script>
+
+</body>
+</html>
